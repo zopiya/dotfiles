@@ -1,5 +1,7 @@
 require("mason").setup()
-require("mason-lspconfig").setup({
+local mason_lspconfig = require("mason-lspconfig")
+
+mason_lspconfig.setup({
   ensure_installed = {
     "lua_ls",
     "pyright",
@@ -31,34 +33,24 @@ local on_attach = function(client, bufnr)
   keymap.set("n", "gr", vim.lsp.buf.references, opts)
 end
 
-lspconfig.lua_ls.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-  settings = {
-    Lua = {
-      diagnostics = {
-        globals = { "vim" },
+mason_lspconfig.setup_handlers({
+  function(server_name)
+    lspconfig[server_name].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+  end,
+  ["lua_ls"] = function()
+    lspconfig.lua_ls.setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+      settings = {
+        Lua = {
+          diagnostics = {
+            globals = { "vim" },
+          },
+        },
       },
-    },
-  },
-})
-
-lspconfig.pyright.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-
-lspconfig.ts_ls.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-
-lspconfig.bashls.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-})
-
-lspconfig.jsonls.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
+    })
+  end,
 })

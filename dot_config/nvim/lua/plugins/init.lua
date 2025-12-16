@@ -3,13 +3,26 @@ return {
   "nvim-lua/plenary.nvim",
   "nvim-tree/nvim-web-devicons",
 
-  -- 2. Theme (Catppuccin)
+  -- 2. Theme (GitHub)
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "projekt0n/github-nvim-theme",
+    name = "github-theme",
+    lazy = false,
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme("catppuccin")
+      require("github-theme").setup({
+        options = {
+          -- 编译主题以加快加载速度
+          compile_path = vim.fn.stdpath("cache") .. "/github-theme",
+          compile_file_suffix = "_compiled",
+          hide_end_of_buffer = true, -- 隐藏缓冲区结束符 (~)
+          hide_nc_statusline = true, -- 隐藏非活动窗口的状态栏
+          transparent = false,       -- 禁用透明背景
+        },
+      })
+      -- 默认使用 GitHub Dark Dimmed (最接近网页版暗色)
+      -- 如果需要亮色，可以改为 github_light
+      vim.cmd("colorscheme github_dark_dimmed")
     end,
   },
 
@@ -18,7 +31,7 @@ return {
     "nvim-lualine/lualine.nvim",
     event = "VeryLazy",
     opts = {
-      options = { theme = "catppuccin" },
+      options = { theme = "auto" }, -- auto 会自动适配当前 colorscheme
     },
   },
   {
