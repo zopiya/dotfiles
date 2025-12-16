@@ -1,10 +1,13 @@
 # General
-alias ls="eza --icons"
-alias ll="eza -l --icons --git"
-alias la="eza -la --icons --git"
+alias ls="eza --icons --group-directories-first"
+alias ll="eza -l --icons --git --group-directories-first"
+alias la="eza -la --icons --git --group-directories-first"
+alias tree="eza --tree --icons"
 alias cat="bat"
 alias grep="rg"
-alias find="fd"
+# fd does not support all find arguments, so we use a short alias instead of overriding
+alias f="fd"
+alias cd="z"
 
 # Git
 alias g="git"

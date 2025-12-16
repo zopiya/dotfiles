@@ -18,12 +18,18 @@ brew "sheldon"
 brew "neovim"
 brew "lazygit"
 brew "gh"
+brew "uv"
+brew "pnpm"
 {{ end -}}
 
 {{ if (get . "install_fonts") -}}
 # ===== Fonts =====
+# Code
 cask "font-jetbrains-mono-nerd-font"
-cask "font-fira-code-nerd-font"
+# UI / Fallback
+cask "font-noto-sans-cjk"
+# Reading / Serif
+cask "font-source-han-serif"
 {{ end -}}
 
 {{ if (get . "install_security") -}}
@@ -38,11 +44,19 @@ brew "age"
 {{ end -}}
 
 {{ if and (get . "install_gui") (not (get . "headless")) -}}
-# ===== GUI Applications =====
+# ===== GUI Applications (macOS) =====
 {{ if eq .chezmoi.os "darwin" -}}
+# Cross-platform
 cask "visual-studio-code"
-cask "iterm2"
 cask "google-chrome"
+cask "dbeaver-community"
+cask "electerm"
+cask "localsend"
+
+# macOS Exclusive
+cask "iterm2"
+cask "raycast"
+cask "orbstack"
 cask "1password"
 {{ end -}}
 {{ end -}}

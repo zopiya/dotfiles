@@ -1,0 +1,8 @@
+# Development
+com.visualstudio.code
+io.dbeaver.DBeaverCommunity
+org.electerm.electerm
+
+# Utilities
+org.localsend.LocalSend_Flutter
+com.google.Chrome
