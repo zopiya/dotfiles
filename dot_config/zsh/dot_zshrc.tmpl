@@ -20,17 +20,25 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 
 # Sheldon (Plugin Manager)
-eval "$(sheldon source)"
+if command -v sheldon &> /dev/null; then
+    eval "$(sheldon source)"
+fi
 
 # Starship (Prompt)
-eval "$(starship init zsh)"
+if command -v starship &> /dev/null; then
+    eval "$(starship init zsh)"
+fi
 
 # Zoxide (Smart Directory Jumper)
-eval "$(zoxide init zsh)"
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+fi
 
 # Mise (Runtime Manager)
 {{- if (get . "install_mise") }}
-eval "$(mise activate zsh)"
+if command -v mise &> /dev/null; then
+    eval "$(mise activate zsh)"
+fi
 {{- end }}
 
 # FZF
