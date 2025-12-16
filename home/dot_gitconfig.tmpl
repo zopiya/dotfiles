@@ -1,6 +1,6 @@
 [include]
-    path = ~/.config/git/identity.gitconfig
-    path = ~/.config/git/aliases.gitconfig
+    path = {{ .chezmoi.homeDir }}/.config/git/identity.gitconfig
+    path = {{ .chezmoi.homeDir }}/.config/git/aliases.gitconfig
 
 [core]
     editor = nvim
@@ -29,7 +29,7 @@
 [push]
     autoSetupRemote = true
 
-{{ if .install_security }}
+{{ if (get . "install_security") }}
 [commit]
     gpgsign = true
 

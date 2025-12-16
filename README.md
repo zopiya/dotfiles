@@ -24,7 +24,7 @@ A modular, cross-platform, and opt-in personal development environment configura
 Run the following command in your terminal:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/yourusername/homeup/main/bootstrap.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/zopiya/dotfiles/refs/heads/main/bootstrap.sh)
 ```
 
 ### 2. Manual Installation
@@ -32,7 +32,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/yourusername/homeup/main/boo
 If you already have Chezmoi installed:
 
 ```bash
-chezmoi init --apply https://github.com/yourusername/homeup.git
+chezmoi init --apply zopiya
 ```
 
 ## ⚙️ Configuration

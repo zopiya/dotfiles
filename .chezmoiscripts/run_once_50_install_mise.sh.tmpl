@@ -1,16 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Purpose: Install and configure Mise (Runtime Manager)
 # Runs once when hash changes
 
-{{- template "utils.sh" . -}}
+{{ template "utils.sh" . -}}
 
-{{ if not .install_mise -}}
-info "Skipping Mise configuration"
+{{ if not (get . "install_mise") -}}
+info "Skipping Mise installation"
 exit 0
 {{ end -}}
 
-set -euo pipefail
+set -eu
+set -o pipefail
 
 header "Configuring Mise Runtime Manager"
 

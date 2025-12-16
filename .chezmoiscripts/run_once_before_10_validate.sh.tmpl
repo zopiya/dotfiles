@@ -1,11 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Purpose: Validate environment before running other scripts
 # Runs once when hash changes
 
-set -euo pipefail
+set -eu
+set -o pipefail
 
-{{- template "utils.sh" . -}}
+{{ template "utils.sh" . -}}
 
 header "Validating Environment"
 
@@ -22,7 +23,7 @@ fi
 
 # Check for internet connection
 step 1 2 "Checking internet connection..."
-if ! curl -s --head https://google.com > /dev/null; then
+if ! curl -s --head https://github.com > /dev/null; then
     error "No internet connection."
     exit 1
 else

@@ -1,16 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Purpose: Install and configure security tools
 # Runs once when hash changes
 
-{{- template "utils.sh" . -}}
+{{ template "utils.sh" . -}}
 
-{{ if not .install_security -}}
+{{ if not (get . "install_security") -}}
 info "Skipping security tools installation (configured in .chezmoi.toml)"
 exit 0
 {{ end -}}
 
-set -euo pipefail
+set -eu
+set -o pipefail
 
 header "Configuring Security Tools"
 

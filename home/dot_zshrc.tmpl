@@ -29,7 +29,7 @@ eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 
 # Mise (Runtime Manager)
-{{- if .install_mise }}
+{{- if (get . "install_mise") }}
 eval "$(mise activate zsh)"
 {{- end }}
 
@@ -42,7 +42,7 @@ source "$HOME/.config/shell/aliases.zsh"
 source "$HOME/.config/shell/functions.zsh"
 
 # Security Module (GPG Agent)
-{{- if .install_security }}
+{{- if (get . "install_security") }}
 export GPG_TTY=$(tty)
 export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
 gpgconf --launch gpg-agent

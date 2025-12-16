@@ -1,16 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Purpose: Configure maintenance tools
 # Runs once when hash changes
 
-{{- template "utils.sh" . -}}
+{{ template "utils.sh" . -}}
 
-{{ if not .install_maintenance -}}
+{{ if not (get . "install_maintenance") -}}
 info "Skipping maintenance tools configuration"
 exit 0
 {{ end -}}
 
-set -euo pipefail
+set -eu
+set -o pipefail
 
 header "Configuring Maintenance Tools"
 

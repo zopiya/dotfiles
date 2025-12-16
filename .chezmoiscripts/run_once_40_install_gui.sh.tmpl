@@ -1,16 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Purpose: Install GUI applications
 # Runs once when hash changes
 
-{{- template "utils.sh" . -}}
+{{ template "utils.sh" . -}}
 
-{{ if not .install_gui -}}
+{{ if not (get . "install_gui") -}}
 info "Skipping GUI applications installation"
 exit 0
 {{ end -}}
 
-set -euo pipefail
+set -eu
+set -o pipefail
 
 header "Installing GUI Applications"
 
@@ -29,11 +30,9 @@ if ! command -v flatpak &> /dev/null; then
     fi
 
     if command -v apt-get &> /dev/null; then
-        $SUDO apt-get install -y flatpak > /dev/null 2>&1 &
-        spinner $! "Installing Flatpak via apt..."
+        $SUDO apt-get install -y flatpak
     elif command -v dnf &> /dev/null; then
-        $SUDO dnf install -y flatpak > /dev/null 2>&1 &
-        spinner $! "Installing Flatpak via dnf..."
+        $SUDO dnf install -y flatpak
     fi
     success "Flatpak installed"
 else
@@ -42,8 +41,7 @@ fi
 
 # Add Flathub repo
 step 2 3 "Adding Flathub repository..."
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo > /dev/null 2>&1 &
-spinner $! "Adding remote..."
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 success "Flathub added"
 
 # Install Flatpak apps

@@ -1,8 +1,4 @@
-# Core Taps
-tap "homebrew/bundle"
-tap "homebrew/services"
-
-{{ if .install_core_cli -}}
+{{ if (get . "install_core_cli") -}}
 # ===== Core CLI Tools =====
 brew "chezmoi"
 brew "git"
@@ -24,13 +20,13 @@ brew "lazygit"
 brew "gh"
 {{ end -}}
 
-{{ if .install_fonts -}}
+{{ if (get . "install_fonts") -}}
 # ===== Fonts =====
 cask "font-jetbrains-mono-nerd-font"
 cask "font-fira-code-nerd-font"
 {{ end -}}
 
-{{ if .install_security -}}
+{{ if (get . "install_security") -}}
 # ===== Security Tools =====
 brew "gnupg"
 brew "yubikey-manager"
@@ -41,7 +37,7 @@ brew "1password-cli"
 brew "age"
 {{ end -}}
 
-{{ if and .install_gui (not .headless) -}}
+{{ if and (get . "install_gui") (not (get . "headless")) -}}
 # ===== GUI Applications =====
 {{ if eq .chezmoi.os "darwin" -}}
 cask "visual-studio-code"
@@ -51,19 +47,13 @@ cask "1password"
 {{ end -}}
 {{ end -}}
 
-{{ if .install_runtime -}}
+{{ if (get . "install_mise") -}}
 # ===== Development Runtimes =====
 brew "mise"
 {{ end -}}
 
-{{ if .install_maintenance -}}
+{{ if (get . "install_maintenance") -}}
 # ===== Maintenance Tools =====
 brew "topgrade"
 brew "restic"
 {{ end -}}
-
-{{ if .install_maintenance }}
-# Maintenance Module
-brew "topgrade"
-brew "restic"
-{{ end }}

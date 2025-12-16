@@ -1,47 +1,86 @@
-{{- /* Checks if running in a headless environment (no GUI) */ -}}
-{{- $headless := false -}}
-{{- if eq .chezmoi.os "linux" -}}
-  {{- if not (env "DISPLAY") -}}
-    {{- $headless = true -}}
-  {{- end -}}
-{{- end -}}
+{{- /* ------------------------------------------------------------------ */ -}}
+{{- /* 👋 Welcome to homeup Setup                                         */ -}}
+{{- /* ------------------------------------------------------------------ */ -}}
 
-{{- /* Default values */ -}}
-{{- $install_core_cli := true -}}
-{{- $install_fonts := true -}}
-{{- $install_security := false -}}
+{{- writeToStdout "👋 Welcome to homeup Setup\n\n" -}}
+
+{{- /* 1. Identity Configuration */ -}}
+{{- writeToStdout "1. Identity Configuration\n" -}}
+{{- $git_name := promptString "   Git Name" -}}
+{{- $git_email := promptString "   Git Email" -}}
+
+{{- /* 2. Machine Profile Selection */ -}}
+{{- writeToStdout "\n2. Machine Profile\n" -}}
+{{- writeToStdout "   [1] workstation  (macOS/Linux GUI) - Core + GUI + Runtime + Maint\n" -}}
+{{- writeToStdout "   [2] server       (Headless)        - Core + Runtime + Maint\n" -}}
+{{- writeToStdout "   [3] minimal      (Container/CI)    - Core only\n" -}}
+{{- writeToStdout "   [9] manual       (Custom)          - Custom selection\n" -}}
+{{- $profile := promptInt "   Select Profile" 1 -}}
+
+{{- /* Default Variables */ -}}
 {{- $install_gui := false -}}
-{{- $install_runtime := false -}}
+{{- $install_mise := false -}}
 {{- $install_maintenance := false -}}
+{{- $profile_name := "manual" -}}
 
-{{- /* Interactive prompts */ -}}
-{{- $install_core_cli = promptBoolOnce . "install_core_cli" "📦 Install Core CLI Tools (git, ripgrep, fzf, bat...)?" $install_core_cli -}}
-
-{{- $install_fonts = promptBoolOnce . "install_fonts" "🎨 Install Fonts (JetBrains Mono, Fira Code...)?" $install_fonts -}}
-
-{{- $install_security = promptBoolOnce . "install_security" "🔐 Install Security Tools (gnupg, yubikey-manager, 1password-cli...)?" $install_security -}}
-
-{{- if not $headless -}}
-{{-   $install_gui = promptBoolOnce . "install_gui" "🖥️  Install GUI Applications (VSCode, Chrome...)?" $install_gui -}}
+{{- /* Logic based on Profile */ -}}
+{{- if eq $profile 1 -}}
+    {{- /* Workstation: All enabled */ -}}
+    {{- $install_gui = true -}}
+    {{- $install_mise = true -}}
+    {{- $install_maintenance = true -}}
+    {{- $profile_name = "workstation" -}}
+{{- else if eq $profile 2 -}}
+    {{- /* Server: No GUI */ -}}
+    {{- $install_gui = false -}}
+    {{- $install_mise = true -}}
+    {{- $install_maintenance = true -}}
+    {{- $profile_name = "server" -}}
+{{- else if eq $profile 3 -}}
+    {{- /* Container: Minimal */ -}}
+    {{- $install_gui = false -}}
+    {{- $install_mise = false -}}
+    {{- $install_maintenance = false -}}
+    {{- $profile_name = "minimal" -}}
+{{- else -}}
+    {{- /* Manual Mode */ -}}
+    {{- writeToStdout "\n   Manual Configuration Mode:\n" -}}
+    {{- $install_gui = promptBool "   Install GUI applications (VSCode, Browser)" false -}}
+    {{- $install_mise = promptBool "   Install Mise (Runtime Manager)" true -}}
+    {{- $install_maintenance = promptBool "   Install Maintenance tools (Topgrade, Restic)" false -}}
+    {{- $profile_name = "manual" -}}
 {{- end -}}
 
-{{- $install_runtime = promptBoolOnce . "install_runtime" "🔧 Install Development Runtimes (mise for version management)?" $install_runtime -}}
+{{- /* 3. Security Module (Independent Check) */ -}}
+{{- writeToStdout "\n3. Security Module\n" -}}
+{{- $install_security := promptBool "   Install Security tools (YubiKey/GPG/1Password)" false -}}
 
-{{- $install_maintenance = promptBoolOnce . "install_maintenance" "🧹 Install Maintenance Tools (topgrade, restic)?" $install_maintenance -}}
-
-{{- $email := promptStringOnce . "email" "Your email address" -}}
+{{- /* 4. Confirmation Summary */ -}}
+{{- writeToStdout "\n📝 Configuration Summary:\n" -}}
+{{- writeToStdout (printf "   Git User:    %s <%s>\n" $git_name $git_email) -}}
+{{- writeToStdout (printf "   Profile:     %s\n" $profile_name) -}}
+{{- writeToStdout "   Modules:\n" -}}
+{{- writeToStdout "     [x] Core CLI (Base)\n" -}}
+{{- writeToStdout (printf "     [%s] GUI Applications\n" (ternary "x" " " $install_gui)) -}}
+{{- writeToStdout (printf "     [%s] Mise Runtime\n" (ternary "x" " " $install_mise)) -}}
+{{- writeToStdout (printf "     [%s] Maintenance Tools\n" (ternary "x" " " $install_maintenance)) -}}
+{{- writeToStdout (printf "     [%s] Security Suite\n" (ternary "x" " " $install_security)) -}}
+{{- writeToStdout "\n🚀 Configuration generated. Run 'chezmoi apply' to install dotfiles.\n\n" -}}
 
 [data]
-    headless = {{ $headless }}
-    email = {{ $email | quote }}
+    name = {{ $git_name | quote }}
+    email = {{ $git_email | quote }}
     
-    # Package installation options
-    install_core_cli = {{ $install_core_cli }}
-    install_fonts = {{ $install_fonts }}
-    install_security = {{ $install_security }}
+    # Feature Flags
+    install_core_cli = true
+    install_fonts = {{ $install_gui }}
     install_gui = {{ $install_gui }}
-    install_runtime = {{ $install_runtime }}
+    install_mise = {{ $install_mise }}
     install_maintenance = {{ $install_maintenance }}
+    install_security = {{ $install_security }}
+
+    # System Detection (Helper for templates)
+    headless = {{ not $install_gui }}
 
 [diff]
     command = "delta"

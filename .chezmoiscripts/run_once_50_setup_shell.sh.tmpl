@@ -1,11 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Purpose: Setup shell environment (FZF bindings, etc.)
 # Runs once when hash changes
 
-set -euo pipefail
+set -eu
+set -o pipefail
 
-{{- template "utils.sh" . -}}
+{{ template "utils.sh" . -}}
 
 header "Setting up Shell Environment"
 
@@ -23,8 +24,7 @@ fi
 # Install FZF key bindings
 step 1 1 "Configuring FZF..."
 if [ -f "$(brew --prefix)/opt/fzf/install" ]; then
-    "$(brew --prefix)/opt/fzf/install" --all --no-bash --no-fish > /dev/null 2>&1 &
-    spinner $! "Installing FZF bindings..."
+    "$(brew --prefix)/opt/fzf/install" --all --no-bash --no-fish
     success "FZF bindings installed"
 else
     info "FZF install script not found, skipping..."
