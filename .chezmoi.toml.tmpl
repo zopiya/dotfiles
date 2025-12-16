@@ -11,7 +11,7 @@
 
 {{- /* 2. Machine Profile Selection */ -}}
 {{- writeToStdout "\n2. Machine Profile\n" -}}
-{{- writeToStdout "   [1] workstation  (macOS/Linux GUI) - Core + GUI + Runtime + Maint\n" -}}
+{{- writeToStdout "   [1] workstation  (macOS/Linux GUI) - Core + GUI + Fonts + Runtime + Maint\n" -}}
 {{- writeToStdout "   [2] server       (Headless)        - Core + Runtime + Maint\n" -}}
 {{- writeToStdout "   [3] minimal      (Container/CI)    - Core only\n" -}}
 {{- writeToStdout "   [9] manual       (Custom)          - Custom selection\n" -}}
@@ -19,6 +19,7 @@
 
 {{- /* Default Variables */ -}}
 {{- $install_gui := false -}}
+{{- $install_fonts := false -}}
 {{- $install_mise := false -}}
 {{- $install_maintenance := false -}}
 {{- $profile_name := "manual" -}}
@@ -27,6 +28,7 @@
 {{- if eq $profile 1 -}}
     {{- /* Workstation: All enabled */ -}}
     {{- $install_gui = true -}}
+    {{- $install_fonts = true -}}
     {{- $install_mise = true -}}
     {{- $install_maintenance = true -}}
     {{- $profile_name = "workstation" -}}
@@ -45,15 +47,20 @@
 {{- else -}}
     {{- /* Manual Mode */ -}}
     {{- writeToStdout "\n   Manual Configuration Mode:\n" -}}
-    {{- $install_gui = promptBool "   Install GUI applications (VSCode, Browser)" false -}}
-    {{- $install_mise = promptBool "   Install Mise (Runtime Manager)" true -}}
-    {{- $install_maintenance = promptBool "   Install Maintenance tools (Topgrade, Restic)" false -}}
+    {{- $install_gui = promptBool "   Install GUI applications? (VSCode, Browser)" false -}}
+    {{- $install_fonts = promptBool "   Install Fonts? (Nerd Fonts)" false -}}
+    {{- $install_mise = promptBool "   Install Mise? (Runtime Manager)" true -}}
+    {{- $install_maintenance = promptBool "   Install Maintenance tools? (Topgrade, Restic)" false -}}
     {{- $profile_name = "manual" -}}
 {{- end -}}
 
 {{- /* 3. Security Module (Independent Check) */ -}}
 {{- writeToStdout "\n3. Security Module\n" -}}
-{{- $install_security := promptBool "   Install Security tools (YubiKey/GPG/1Password)" false -}}
+{{- $install_security := promptBool "   Install Security tools? (YubiKey/GPG/1Password)" false -}}
+{{- $git_signingkey := "" -}}
+{{- if $install_security -}}
+    {{- $git_signingkey = promptString "   Git Signing Key (optional, press Enter to skip)" -}}
+{{- end -}}
 
 {{- /* 4. Confirmation Summary */ -}}
 {{- writeToStdout "\n📝 Configuration Summary:\n" -}}
@@ -62,6 +69,7 @@
 {{- writeToStdout "   Modules:\n" -}}
 {{- writeToStdout "     [x] Core CLI (Base)\n" -}}
 {{- writeToStdout (printf "     [%s] GUI Applications\n" (ternary "x" " " $install_gui)) -}}
+{{- writeToStdout (printf "     [%s] Fonts\n" (ternary "x" " " $install_fonts)) -}}
 {{- writeToStdout (printf "     [%s] Mise Runtime\n" (ternary "x" " " $install_mise)) -}}
 {{- writeToStdout (printf "     [%s] Maintenance Tools\n" (ternary "x" " " $install_maintenance)) -}}
 {{- writeToStdout (printf "     [%s] Security Suite\n" (ternary "x" " " $install_security)) -}}
@@ -73,14 +81,22 @@
     
     # Feature Flags
     install_core_cli = true
-    install_fonts = {{ $install_gui }}
+    install_fonts = {{ $install_fonts }}
     install_gui = {{ $install_gui }}
     install_mise = {{ $install_mise }}
     install_maintenance = {{ $install_maintenance }}
     install_security = {{ $install_security }}
+    git_signingkey = {{ $git_signingkey | quote }}
 
     # System Detection (Helper for templates)
     headless = {{ not $install_gui }}
+    is_mac = {{ eq .chezmoi.os "darwin" }}
+    is_linux = {{ eq .chezmoi.os "linux" }}
+    is_wsl = {{ (and (eq .chezmoi.os "linux") (contains "microsoft" .chezmoi.kernel.osrelease)) }}
+
+[update]
+    apply = false
+    method = "brew"
 
 [diff]
     command = "delta"
