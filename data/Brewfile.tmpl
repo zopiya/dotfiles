@@ -27,17 +27,15 @@ brew "zsh"
 
 {{ if (get . "install_fonts") -}}
 # Fonts
-{{   if eq .chezmoi.os "darwin" -}}
-cask "font-jetbrains-mono-nerd-font"
-cask "font-hack-nerd-font"
-cask "font-noto-sans"
-cask "font-source-han-serif-vf"
-{{   end -}}
+brew "font-jetbrains-mono-nerd-font"
+brew "font-hack-nerd-font"
+brew "font-noto-sans"
+brew "font-source-han-serif-vf"
 {{ end -}}
 
 {{ if (get . "install_security") -}}
 # Security Tools
-cask "1password-cli"
+brew "1password-cli"
 brew "age"
 brew "gnupg"
 brew "ykman"

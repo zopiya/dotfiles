@@ -2,7 +2,9 @@ require("core.options")
 require("core.keymaps")
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+-- 兼容性修正: Neovim 0.10+ 推荐使用 vim.uv，旧版本使用 vim.loop
+local uv = vim.uv or vim.loop
+if not uv.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",

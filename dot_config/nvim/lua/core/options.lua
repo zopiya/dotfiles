@@ -35,3 +35,7 @@ opt.splitbelow = true
 -- Undo & Scroll
 opt.undofile = true -- Persistent undo
 opt.scrolloff = 8   -- Keep cursor in middle
+
+-- Encoding
+opt.encoding = "utf-8"
+opt.fileencoding = "utf-8"
