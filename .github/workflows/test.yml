@@ -1,11 +1,14 @@
-name: Test Bootstrap Script
+name: Test Dotfiles
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/test.yml"
 
 jobs:
   test-macos:
-    name: Test on macOS
+    name: Test on macOS (Workstation)
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -39,14 +42,14 @@ jobs:
             echo "Error: shellenv file not found!"
             exit 1
           fi
-          
+
           echo "Verifying Homebrew..."
           if ! command -v brew &> /dev/null; then
              echo "Error: brew command not found in PATH"
              exit 1
           fi
           brew --version
-          
+
           echo "Verifying chezmoi..."
           if ! command -v chezmoi &> /dev/null; then
              echo "Error: chezmoi command not found in PATH"
@@ -54,22 +57,43 @@ jobs:
           fi
           chezmoi --version
 
+      - name: Initialize chezmoi
+        run: |
+          if [ -f "$HOME/.config/homebrew/shellenv" ]; then
+            source "$HOME/.config/homebrew/shellenv"
+          fi
+          chezmoi init --apply --source .
+        env:
+          CHEZMOI_GIT_NAME: "Test User"
+          CHEZMOI_GIT_EMAIL: "test@example.com"
+          CHEZMOI_PROFILE: "1"
+          CHEZMOI_INSTALL_SECURITY: "false"
+
   test-linux:
-    name: Test on ${{ matrix.distro }}
+    name: Test on ${{ matrix.distro }} (${{ matrix.type }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Workstation Profile (1)
+          - distro: fedora
+            type: Workstation
+            image: fedora:latest
+            profile: "1"
+            pre_install: dnf install -y sudo curl git file shadow-utils findutils
+
+          # Server Profile (2)
           - distro: ubuntu
+            type: Server
             image: ubuntu:latest
+            profile: "2"
             pre_install: apt-get update && apt-get install -y sudo curl git file
           - distro: debian
+            type: Server
             image: debian:latest
+            profile: "2"
             pre_install: apt-get update && apt-get install -y sudo curl git file
-          - distro: fedora
-            image: fedora:latest
-            pre_install: dnf install -y sudo curl git file shadow-utils findutils
 
     container:
       image: ${{ matrix.image }}
@@ -117,4 +141,20 @@ jobs:
                exit 1
             fi
             chezmoi --version
+          "
+
+      - name: Initialize chezmoi
+        run: |
+          su - testuser -c "
+            export CHEZMOI_GIT_NAME='Test User'
+            export CHEZMOI_GIT_EMAIL='test@example.com'
+            export CHEZMOI_PROFILE='${{ matrix.profile }}'
+            export CHEZMOI_INSTALL_SECURITY='false'
+            
+            if [ -f \"\$HOME/.config/homebrew/shellenv\" ]; then
+              source \"\$HOME/.config/homebrew/shellenv\"
+            fi
+            
+            cd $GITHUB_WORKSPACE
+            chezmoi init --apply --source .
           "

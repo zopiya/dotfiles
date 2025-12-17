@@ -6,16 +6,28 @@
 
 {{- /* 1. Identity Configuration */ -}}
 {{- writeToStdout "1. Identity Configuration\n" -}}
-{{- $git_name := promptString "   Git Name" -}}
-{{- $git_email := promptString "   Git Email" -}}
+{{- $git_name := env "CHEZMOI_GIT_NAME" -}}
+{{- if not $git_name -}}
+    {{- $git_name = promptString "   Git Name" -}}
+{{- end -}}
+{{- $git_email := env "CHEZMOI_GIT_EMAIL" -}}
+{{- if not $git_email -}}
+    {{- $git_email = promptString "   Git Email" -}}
+{{- end -}}
 
 {{- /* 2. Machine Profile Selection */ -}}
 {{- writeToStdout "\n2. Machine Profile\n" -}}
 {{- writeToStdout "   [1] workstation  (macOS/Linux GUI) - Core + GUI + Fonts + Runtime + Maint\n" -}}
 {{- writeToStdout "   [2] server       (Headless)        - Core + Runtime + Maint\n" -}}
-{{- writeToStdout "   [3] minimal      (Container/CI)    - Core only\n" -}}
 {{- writeToStdout "   [9] manual       (Custom)          - Custom selection\n" -}}
-{{- $profile := promptInt "   Select Profile" 1 -}}
+
+{{- $profile_env := env "CHEZMOI_PROFILE" -}}
+{{- $profile := 1 -}}
+{{- if $profile_env -}}
+    {{- $profile = $profile_env | atoi -}}
+{{- else -}}
+    {{- $profile = promptInt "   Select Profile" 1 -}}
+{{- end -}}
 
 {{- /* Default Variables */ -}}
 {{- $install_gui := false -}}
@@ -38,12 +50,6 @@
     {{- $install_mise = true -}}
     {{- $install_maintenance = true -}}
     {{- $profile_name = "server" -}}
-{{- else if eq $profile 3 -}}
-    {{- /* Container: Minimal */ -}}
-    {{- $install_gui = false -}}
-    {{- $install_mise = false -}}
-    {{- $install_maintenance = false -}}
-    {{- $profile_name = "minimal" -}}
 {{- else -}}
     {{- /* Manual Mode */ -}}
     {{- writeToStdout "\n   Manual Configuration Mode:\n" -}}
@@ -56,10 +62,20 @@
 
 {{- /* 3. Security Module (Independent Check) */ -}}
 {{- writeToStdout "\n3. Security Module\n" -}}
-{{- $install_security := promptBool "   Install Security tools? (YubiKey/GPG/1Password)" false -}}
+{{- $install_security_env := env "CHEZMOI_INSTALL_SECURITY" -}}
+{{- $install_security := false -}}
+{{- if $install_security_env -}}
+    {{- $install_security = eq $install_security_env "true" -}}
+{{- else -}}
+    {{- $install_security = promptBool "   Install Security tools? (YubiKey/GPG/1Password)" false -}}
+{{- end -}}
+
 {{- $git_signingkey := "" -}}
 {{- if $install_security -}}
-    {{- $git_signingkey = promptString "   Git Signing Key (optional, press Enter to skip)" -}}
+    {{- $git_signingkey = env "CHEZMOI_GIT_SIGNINGKEY" -}}
+    {{- if not $git_signingkey -}}
+        {{- $git_signingkey = promptString "   Git Signing Key (optional, press Enter to skip)" -}}
+    {{- end -}}
 {{- end -}}
 
 {{- /* 4. Confirmation Summary */ -}}
