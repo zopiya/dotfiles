@@ -1,7 +1,15 @@
 [settings]
-legacy_version_file = true
+experimental = true
+idiomatic_version_file_enable_tools = ["python", "node"]
+trusted_config_paths = [
+    "~/workspace",
+    "~/dev",
+    "~/code",
+    "~/work"
+]
 
 [tools]
-python = "3.13.11"
+python = "3.13"
 node = "lts"
 rust = "stable"
+uv = "latest"
