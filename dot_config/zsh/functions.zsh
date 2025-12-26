@@ -59,7 +59,7 @@ unbak() {
     # Optimized: Use zsh glob qualifiers (.om[1]) instead of ls/head
     # . = regular files, om = order by modification time (newest first), [1] = take first, N = nullglob
     local latest
-    
+
     # SC2039/SC3054: Disable warnings for Zsh-specific glob qualifiers
     # shellcheck disable=SC2039,SC3054
     latest=("${1}.bak."*(.om[1]N))
@@ -157,10 +157,10 @@ killport() {
         echo "Usage: killport <port_number>"
         return 1
     fi
-    
+
     local pid
     pid=$(lsof -ti :"$1")
-    
+
     if [[ -n "$pid" ]]; then
         kill -9 "$pid" && echo "✅ Killed process on port $1 (PID: $pid)"
     else
@@ -183,6 +183,93 @@ alias cov='code --profile View'
 
 # Hub: Project management / Heavy lifting (Full UI)
 alias coh='code --profile Hub'
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Tmux Session Management
+# ───────────────────────────────────────────────────────────────────────────────
+
+# Quick attach or create session
+tm() {
+    if [[ -z "$1" ]]; then
+        # No argument: show session list and attach to selected
+        if command -v fzf &> /dev/null; then
+            local session
+            session=$(tmux list-sessions -F "#{session_name}" 2>/dev/null | fzf --prompt="Select session: ")
+            [[ -n "$session" ]] && tmux attach-session -t "$session"
+        else
+            tmux list-sessions 2>/dev/null || echo "❌ No active sessions"
+        fi
+    else
+        # Attach to existing or create new
+        tmux attach-session -t "$1" 2>/dev/null || tmux new-session -s "$1"
+    fi
+}
+
+# Kill tmux session
+tmk() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: tmk <session_name>"
+        echo "Current sessions:"
+        tmux list-sessions 2>/dev/null || echo "  (none)"
+        return 1
+    fi
+
+    tmux kill-session -t "$1" 2>/dev/null && echo "✅ Killed session: $1" || echo "❌ Session not found: $1"
+}
+
+# Create project session (automatic directory-based session)
+tmp() {
+    local session_name
+    local target_dir="${1:-.}"
+
+    # Use directory name as session name
+    session_name=$(basename "$(cd "$target_dir" && pwd)" | tr '.' '_')
+
+    if tmux has-session -t "$session_name" 2>/dev/null; then
+        tmux attach-session -t "$session_name"
+    else
+        tmux new-session -s "$session_name" -c "$target_dir"
+    fi
+}
+
+# List all tmux sessions with details
+tml() {
+    if ! tmux list-sessions 2>/dev/null; then
+        echo "❌ No active tmux sessions"
+        return 1
+    fi
+}
+
+# Tmux window switcher (fuzzy find)
+tmw() {
+    if [[ ! -n "$TMUX" ]]; then
+        echo "❌ Not in a tmux session"
+        return 1
+    fi
+
+    if command -v fzf &> /dev/null; then
+        local window
+        window=$(tmux list-windows -F "#{window_index}: #{window_name}" | fzf --prompt="Switch to window: ")
+        [[ -n "$window" ]] && tmux select-window -t "${window%%:*}"
+    else
+        tmux list-windows
+    fi
+}
+
+# Kill all tmux sessions (nuclear option)
+tmka() {
+    if tmux list-sessions 2>/dev/null; then
+        read -q "REPLY?⚠️  Kill ALL tmux sessions? (y/n) "
+        echo
+        if [[ "$REPLY" == "y" ]]; then
+            tmux kill-server && echo "✅ All sessions killed"
+        else
+            echo "❌ Aborted"
+        fi
+    else
+        echo "❌ No active sessions"
+    fi
+}
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Misc Utilities
