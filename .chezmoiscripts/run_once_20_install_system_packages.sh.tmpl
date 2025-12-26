@@ -62,7 +62,11 @@ elif [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then
 fi
 
 # Render Brewfile to a temporary location
-BREWFILE=$(mktemp -t brewfile.XXXXXX 2>/dev/null || mktemp)
+if [[ "$(uname)" == "Darwin" ]]; then
+    BREWFILE=$(mktemp -t brewfile)
+else
+    BREWFILE=$(mktemp)
+fi
 trap 'rm -f "$BREWFILE"' EXIT
 
 # Use chezmoi execute-template to render the Brewfile

@@ -15,6 +15,13 @@ pinentry-program /opt/homebrew/bin/pinentry-mac
 pinentry-program /usr/local/bin/pinentry-mac
 {{-   end }}
 {{- else }}
-# Linux: Use Homebrew pinentry
+# Linux: Try Homebrew pinentry first, fall back to system pinentry
+{{-   if stat "/home/linuxbrew/.linuxbrew/bin/pinentry" }}
 pinentry-program /home/linuxbrew/.linuxbrew/bin/pinentry
+{{-   else if stat (printf "%s/.linuxbrew/bin/pinentry" .chezmoi.homeDir) }}
+pinentry-program {{ .chezmoi.homeDir }}/.linuxbrew/bin/pinentry
+{{-   else }}
+# Fallback to system pinentry
+pinentry-program /usr/bin/pinentry
+{{-   end }}
 {{- end }}

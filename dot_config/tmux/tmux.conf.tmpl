@@ -75,7 +75,7 @@ bind x confirm-before -p "Kill pane? (y/n)" kill-pane
 bind X confirm-before -p "Kill window? (y/n)" kill-window
 
 # === Reload ===
-bind r source-file ~/.tmux.conf \; display-message "Config reloaded"
+bind r source-file ~/.config/tmux/tmux.conf \; display-message "Config reloaded"
 
 # === Status Bar ===
 set -g status-position bottom
@@ -117,7 +117,7 @@ bind '{' swap-pane -U
 bind '}' swap-pane -D
 
 # === Utilities ===
-bind e new-window -n "conf" "${EDITOR:-vim} ~/.tmux.conf && tmux source ~/.tmux.conf"
+bind e new-window -n "conf" "$EDITOR ~/.config/tmux/tmux.conf && tmux source ~/.config/tmux/tmux.conf"
 bind q display-panes
 bind t clock-mode
 set -g clock-mode-style 24
@@ -158,4 +158,5 @@ set -g @continuum-restore 'on'
 set -g @continuum-save-interval '15'
 
 # Initialize TPM (keep at bottom)
-run '~/.tmux/plugins/tpm/tpm'
+# Only load TPM if it's installed
+if-shell "[ -f ~/.tmux/plugins/tpm/tpm ]" "run '~/.tmux/plugins/tpm/tpm'"

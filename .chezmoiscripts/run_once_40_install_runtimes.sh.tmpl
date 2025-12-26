@@ -54,7 +54,10 @@ fi
 # Install Mise if not present
 if ! check_cmd mise; then
     info "Installing Mise..."
-    curl https://mise.run | sh
+    if ! curl --fail --silent --show-error --location --max-time 60 --retry 3 https://mise.run | sh; then
+        error "Failed to install Mise"
+        exit 1
+    fi
     export PATH="$HOME/.local/bin:$PATH"
 else
     success "Mise is already installed"
@@ -76,7 +79,7 @@ step 2 3 "Installing global packages..."
 [[ -n "${CI:-}" ]] && export MISE_NODE_GPG_VERIFY=0
 
 # Python
-if ! mise list python | grep -q "3.12"; then
+if ! mise list python 2>/dev/null | grep -q "3.12"; then
     info "Installing Python 3.12..."
     mise use -g python@3.12
 else
@@ -84,7 +87,7 @@ else
 fi
 
 # Node
-if ! mise list node | grep -q "lts"; then
+if ! mise list node 2>/dev/null | grep -q "lts"; then
     info "Installing Node.js LTS..."
     mise use -g node@lts
 else
