@@ -74,9 +74,11 @@ step 3 3 "Setting default shell..."
 CURRENT_SHELL=$SHELL
 # On macOS, $SHELL might not update immediately, so we check user database
 if [ "$(uname)" == "Darwin" ]; then
-    CURRENT_SHELL=$(dscl . -read /Users/$USER UserShell | awk '{print $2}')
+    SHELL_FROM_DB=$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')
+    [ -n "$SHELL_FROM_DB" ] && CURRENT_SHELL="$SHELL_FROM_DB"
 elif [ "$(uname)" == "Linux" ]; then
-    CURRENT_SHELL=$(getent passwd $USER | awk -F: '{print $7}')
+    SHELL_FROM_DB=$(getent passwd "$USER" 2>/dev/null | awk -F: '{print $7}')
+    [ -n "$SHELL_FROM_DB" ] && CURRENT_SHELL="$SHELL_FROM_DB"
 fi
 
 if [ "$CURRENT_SHELL" != "$TARGET_SHELL" ]; then
@@ -100,18 +102,22 @@ fi
 
 # Install FZF key bindings
 step 1 1 "Configuring FZF..."
-FZF_INSTALL_SCRIPT="$(brew --prefix)/opt/fzf/install"
+if check_cmd brew; then
+    FZF_INSTALL_SCRIPT="$(brew --prefix)/opt/fzf/install"
 
-if [ -f "$FZF_INSTALL_SCRIPT" ]; then
-    if [ -f "$HOME/.fzf.zsh" ]; then
-        substep "FZF bindings already configured"
+    if [ -f "$FZF_INSTALL_SCRIPT" ]; then
+        if [ -f "$HOME/.fzf.zsh" ]; then
+            substep "FZF bindings already configured"
+        else
+            info "Running FZF install script..."
+            "$FZF_INSTALL_SCRIPT" --all --no-bash --no-fish
+            success "FZF bindings installed"
+        fi
     else
-        info "Running FZF install script..."
-        "$FZF_INSTALL_SCRIPT" --all --no-bash --no-fish
-        success "FZF bindings installed"
+        warning "FZF install script not found, skipping..."
     fi
 else
-    warning "FZF install script not found, skipping..."
+    warning "Homebrew not found, skipping FZF configuration..."
 fi
 
 success "Shell setup complete"
