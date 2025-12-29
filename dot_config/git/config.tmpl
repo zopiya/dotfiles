@@ -46,10 +46,8 @@
 [push]
     autoSetupRemote = true
 
-{{ if (get . "install_security") }}
 [commit]
     gpgsign = true
 
 [tag]
     gpgsign = true
-{{ end }}

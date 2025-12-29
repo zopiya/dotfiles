@@ -1,0 +1,77 @@
+# macOS Brewfile
+
+# 1. Shell Essentials
+brew "zsh"
+brew "starship"
+brew "sheldon"
+brew "zoxide"
+brew "fzf"
+
+# 2. Modern Unix Tools
+brew "bat"
+brew "eza"
+brew "fd"
+brew "ripgrep"
+brew "jq"
+brew "yq"
+brew "git-delta"
+
+# 3. Development & Productivity
+brew "git"
+brew "gh"
+brew "lazygit"
+brew "neovim"
+brew "tmux"
+brew "yazi"
+
+# 4. Network & Transfer
+brew "curl"
+brew "wget"
+brew "httpie"
+
+# 5. Runtime & Package Management
+brew "mise"
+brew "uv"
+brew "pnpm"
+
+# 6. Security & Identity
+brew "gnupg"
+brew "age"
+brew "ykman"
+brew "1password-cli"
+brew "pinentry-mac"
+
+# 7. System Maintenance
+brew "chezmoi"
+brew "topgrade"
+brew "restic"
+
+# 8. Fonts (Nerd Fonts)
+cask "font-jetbrains-mono-nerd-font"
+cask "font-hack-nerd-font"
+cask "font-noto-sans"
+cask "font-source-han-serif-vf"
+
+# 9. GUI Applications
+# Browsers
+cask "google-chrome"
+cask "firefox"
+
+# Communication & Sync
+cask "localsend"
+cask "nextcloud"
+
+# Development GUI
+cask "visual-studio-code"
+cask "jetbrains-toolbox"
+cask "iterm2"
+cask "electerm"
+cask "dbeaver-community"
+
+# Productivity & Utilities
+cask "1password"
+cask "obsidian"
+cask "typora"
+cask "keka"
+cask "stats"
+cask "vlc"

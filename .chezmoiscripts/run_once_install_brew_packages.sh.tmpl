@@ -1,0 +1,256 @@
+#!/usr/bin/env bash
+#
+# Homeup Installation Script (Managed by chezmoi)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Purpose: Core installation logic (Brew, Runtimes, Shell, Security)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+set -Eeuo pipefail
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Constants & Helpers
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+readonly SPINNER_FRAMES='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+
+# TTY detection
+if [[ -t 1 ]] && [[ "${TERM:-dumb}" != "dumb" ]]; then
+    readonly IS_TTY=true
+    readonly C_RESET=$'\033[0m'
+    readonly C_GREEN=$'\033[32m'
+    readonly C_GRAY=$'\033[90m'
+    readonly C_RED=$'\033[31m'
+    readonly C_CYAN=$'\033[36m'
+    readonly C_BLUE=$'\033[34m'
+else
+    readonly IS_TTY=false
+    readonly C_RESET='' C_GREEN='' C_GRAY='' C_RED='' C_CYAN='' C_BLUE=''
+fi
+
+msg_ok()   { printf "%s[OK]%s   %s\n" "$C_GREEN" "$C_RESET" "$1"; }
+msg_skip() { printf "%s[SKIP]%s %s\n" "$C_GRAY" "$C_RESET" "$1"; }
+msg_fail() { printf "%s[FAIL]%s %s\n" "$C_RED" "$C_RESET" "$1" >&2; }
+msg_info() { printf "       %s\n" "$1"; }
+header()   { printf "\n%s━━━ %s ━━━%s\n" "$C_CYAN" "$1" "$C_RESET"; }
+
+die() {
+    msg_fail "$1"
+    exit "${2:-1}"
+}
+
+spinner() {
+    local pid=$1 message=$2
+    local frame=0 delay=0.1
+
+    if [[ "$IS_TTY" != true ]]; then
+        printf "       %s...\n" "$message"
+        wait "$pid" 2>/dev/null
+        return $?
+    fi
+
+    while kill -0 "$pid" 2>/dev/null; do
+        printf "\r\033[K%s%s%s %s" "$C_CYAN" "${SPINNER_FRAMES:frame:1}" "$C_RESET" "$message"
+        frame=$(( (frame + 1) % ${#SPINNER_FRAMES} ))
+        sleep "$delay"
+    done
+    printf "\r\033[K"
+
+    wait "$pid" 2>/dev/null
+    return $?
+}
+
+require_cmd() {
+    command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 1. Environment Initialization
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+init_environment() {
+    header "Environment"
+
+    # Load Homebrew Shellenv
+    if [[ -x /opt/homebrew/bin/brew ]]; then eval "$(/opt/homebrew/bin/brew shellenv)";
+    elif [[ -x /usr/local/bin/brew ]]; then eval "$(/usr/local/bin/brew shellenv)";
+    elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)";
+    elif [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then eval "$($HOME/.linuxbrew/bin/brew shellenv)";
+    fi
+
+    if ! command -v brew >/dev/null 2>&1; then
+        die "Homebrew is not installed. Please run ./bootstrap.sh first."
+    fi
+
+    msg_ok "Homebrew found"
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2. Package Installation (Brewfile)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+install_packages() {
+    header "Packages"
+
+    local brewfile
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        brewfile="{{ .chezmoi.sourceDir }}/packages/Brewfile.macos"
+    else
+        brewfile="{{ .chezmoi.sourceDir }}/packages/Brewfile.linux"
+    fi
+
+    if [[ ! -f "$brewfile" ]]; then
+        die "Brewfile not found: $brewfile"
+    fi
+
+    msg_info "Using Brewfile: $(basename "$brewfile")"
+    
+    # We use a subshell and redirection to suppress verbose output unless it fails
+    (
+        HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="$brewfile" --no-lock >/dev/null 2>&1
+    ) &
+    
+    if spinner $! "Installing packages (this may take a while)"; then
+        msg_ok "Packages installed"
+    else
+        # If it failed, run it again without suppression to show errors
+        msg_fail "Package installation failed. Retrying with verbose output..."
+        brew bundle --file="$brewfile" --no-lock
+        exit 1
+    fi
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 3. Security Tools (GPG)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+configure_security() {
+    header "Security"
+
+    if command -v gpgconf >/dev/null 2>&1; then
+        gpgconf --kill gpg-agent >/dev/null 2>&1 || true
+        gpgconf --launch gpg-agent >/dev/null 2>&1 || true
+        msg_ok "GPG Agent reloaded"
+    else
+        msg_skip "GPG not found"
+    fi
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 4. Runtimes (Mise)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+configure_runtimes() {
+    header "Runtimes"
+
+    if ! command -v mise >/dev/null 2>&1; then
+        msg_info "Installing Mise..."
+        curl -fsSL https://mise.run | sh >/dev/null 2>&1
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+
+    # Suppress output during installation
+    (
+        mise install -y >/dev/null 2>&1
+        mise use -g python@3.12 node@lts -y >/dev/null 2>&1
+        
+        # Python tools
+        if ! command -v uv >/dev/null 2>&1; then
+            mise exec python@3.12 -- pip install uv >/dev/null 2>&1
+        fi
+        
+        # Node tools
+        if ! command -v pnpm >/dev/null 2>&1; then
+             mise exec node@lts -- npm install -g pnpm >/dev/null 2>&1
+        fi
+    ) &
+
+    if spinner $! "Configuring Mise & Global packages"; then
+        msg_ok "Mise configured (Python 3.12, Node LTS, uv, pnpm)"
+    else
+        die "Mise configuration failed"
+    fi
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 5. Shell Configuration
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+configure_shell() {
+    header "Shell"
+
+    # Find Zsh
+    local target_shell=""
+    local brew_prefix
+    brew_prefix="$(brew --prefix)"
+
+    if [[ -x "$brew_prefix/bin/zsh" ]]; then
+        target_shell="$brew_prefix/bin/zsh"
+    else
+        target_shell="$(command -v zsh)"
+    fi
+
+    if [[ -z "$target_shell" ]]; then
+        msg_fail "Zsh not found"
+        return
+    fi
+
+    # Ensure in /etc/shells
+    if ! grep -q "$target_shell" /etc/shells; then
+        msg_info "Adding $target_shell to /etc/shells..."
+        if command -v sudo >/dev/null 2>&1;
+        then
+            echo "$target_shell" | sudo tee -a /etc/shells >/dev/null
+        else
+             echo "$target_shell" | tee -a /etc/shells >/dev/null
+        fi
+    fi
+
+    # Change default shell
+    local current_shell="$SHELL"
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        current_shell=$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')
+    fi
+
+    if [[ "$current_shell" != "$target_shell" ]]; then
+        msg_info "Changing default shell to $target_shell..."
+        if command -v sudo >/dev/null 2>&1;
+        then
+             sudo chsh -s "$target_shell" "$USER"
+        else
+             chsh -s "$target_shell"
+        fi
+        msg_ok "Shell changed"
+    else
+        msg_skip "Default shell is already Zsh"
+    fi
+
+    # FZF bindings
+    local fzf_install="$brew_prefix/opt/fzf/install"
+    if [[ -f "$fzf_install" ]]; then
+        if [[ ! -f "$HOME/.fzf.zsh" ]]; then
+            "$fzf_install" --all --no-bash --no-fish >/dev/null 2>&1
+            msg_ok "FZF bindings installed"
+        else
+            msg_skip "FZF bindings already present"
+        fi
+    fi
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Main
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+main() {
+    init_environment
+    install_packages
+    configure_security
+    configure_runtimes
+    configure_shell
+
+    header "Complete"
+    msg_ok "Configuration finished successfully."
+    msg_info "Please restart your shell to apply all changes."
+    printf "\n"
+}
+
+main "$@"

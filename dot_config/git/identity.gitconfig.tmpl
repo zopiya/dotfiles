@@ -1,8 +1,8 @@
 [user]
-    name = {{ .chezmoi.username | quote }}
-    email = {{ get . "email" | quote }}
+    name = "zopiya"
+    email = "i@zopiya.com"
 
-{{ if (get . "install_security") }}
-[user]
-    signingkey = {{ get . "gpg_key_id" | default "" | quote }}
-{{ end }}
+# [user]
+    # GPG Signing Key
+    # Replace with your actual key ID
+    # signingkey = ""

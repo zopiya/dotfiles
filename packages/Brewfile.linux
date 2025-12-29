@@ -1,0 +1,46 @@
+# Linux Brewfile
+
+# 1. Shell Essentials
+brew "zsh"
+brew "starship"
+brew "sheldon"
+brew "zoxide"
+brew "fzf"
+
+# 2. Modern Unix Tools
+brew "bat"
+brew "eza"
+brew "fd"
+brew "ripgrep"
+brew "jq"
+brew "yq"
+brew "git-delta"
+
+# 3. Development & Productivity
+brew "git"
+brew "gh"
+brew "lazygit"
+brew "neovim"
+brew "tmux"
+brew "yazi"
+
+# 4. Network & Transfer
+brew "curl"
+brew "wget"
+brew "httpie"
+
+# 5. Runtime & Package Management
+brew "mise"
+brew "uv"
+brew "pnpm"
+
+# 6. Security & Identity
+brew "gnupg"
+brew "age"
+brew "ykman"
+brew "1password-cli"
+
+# 7. System Maintenance
+brew "chezmoi"
+brew "topgrade"
+brew "restic"
