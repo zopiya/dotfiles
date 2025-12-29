@@ -35,11 +35,9 @@ if command -v zoxide &> /dev/null; then
 fi
 
 # Mise (Runtime Manager)
-{{- if (get . "install_mise") }}
 if command -v mise &> /dev/null; then
     eval "$(mise activate zsh)"
 fi
-{{- end }}
 
 # FZF
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -50,13 +48,8 @@ fi
 [ -f "$ZDOTDIR/functions.zsh" ] && source "$ZDOTDIR/functions.zsh"
 
 # Security Module (GPG Agent)
-{{- if (get . "install_security") }}
 if command -v gpgconf &> /dev/null; then
     export GPG_TTY=$(tty)
     export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
     gpgconf --launch gpg-agent 2>/dev/null || true
 fi
-{{- end }}
-
-# Syntax Highlighting (must be last)
-# source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

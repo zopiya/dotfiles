@@ -30,7 +30,7 @@ fi
 msg_ok()   { printf "%s[OK]%s   %s\n" "$C_GREEN" "$C_RESET" "$1"; }
 msg_skip() { printf "%s[SKIP]%s %s\n" "$C_GRAY" "$C_RESET" "$1"; }
 msg_fail() { printf "%s[FAIL]%s %s\n" "$C_RED" "$C_RESET" "$1" >&2; }
-msg_info() { printf "       %s\n" "$1"; }
+msg_info() { printf "%s[INFO]%s %s\n" "$C_BLUE" "$C_RESET" "$1"; }
 header()   { printf "\n%s━━━ %s ━━━%s\n" "$C_CYAN" "$1" "$C_RESET"; }
 
 die() {
@@ -77,7 +77,8 @@ init_environment() {
     elif [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then eval "$($HOME/.linuxbrew/bin/brew shellenv)";
     fi
 
-    if ! command -v brew >/dev/null 2>&1; then
+    if ! command -v brew >/dev/null 2>&1;
+ then
         die "Homebrew is not installed. Please run ./bootstrap.sh first."
     fi
 
@@ -89,7 +90,7 @@ init_environment() {
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 install_packages() {
-    header "Packages"
+    header "Packages (Homebrew)"
 
     local brewfile
     if [[ "$(uname -s)" == "Darwin" ]]; then
@@ -120,13 +121,69 @@ install_packages() {
 }
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 3. Security Tools (GPG)
+# 3. Flatpak Installation (Linux Only)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+install_flatpaks() {
+    if [[ "$(uname -s)" != "Linux" ]]; then return; fi
+    header "GUI Applications (Flatpak)"
+
+    # Headless Detection
+    if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+        msg_skip "Headless environment detected (Skipping GUI apps)"
+        return
+    fi
+
+    if ! command -v flatpak >/dev/null 2>&1;
+ then
+        msg_skip "Flatpak not installed (Skipping)"
+        return
+    fi
+
+    # Ensure Flathub is added
+    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1 || true
+
+    local flatpak_list="{{ .chezmoi.sourceDir }}/packages/flatpak.txt"
+    if [[ ! -f "$flatpak_list" ]]; then
+         msg_skip "No flatpak.txt found"
+         return
+    fi
+    
+    msg_info "Processing packages/flatpak.txt..."
+
+    # Read lines, strip comments, ignore empty lines
+    while IFS= read -r app || [[ -n "$app" ]]; do
+        # Remove comments (content after #)
+        app=${app%%#*}
+        # Trim whitespace (requires xargs or similar, but simplified here)
+        app=$(echo "$app" | xargs)
+        
+        if [[ -z "$app" ]]; then continue; fi
+
+        if flatpak list --app | grep -q "$app"; then
+            msg_skip "$app (already installed)"
+        else
+            (
+                flatpak install -y flathub "$app" >/dev/null 2>&1
+            ) &
+            if spinner $! "Installing $app"; then
+                msg_ok "$app installed"
+            else
+                msg_fail "Failed to install $app"
+            fi
+        fi
+    done < "$flatpak_list"
+}
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 4. Security Tools (GPG)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 configure_security() {
     header "Security"
 
-    if command -v gpgconf >/dev/null 2>&1; then
+    if command -v gpgconf >/dev/null 2>&1;
+ then
         gpgconf --kill gpg-agent >/dev/null 2>&1 || true
         gpgconf --launch gpg-agent >/dev/null 2>&1 || true
         msg_ok "GPG Agent reloaded"
@@ -136,13 +193,14 @@ configure_security() {
 }
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 4. Runtimes (Mise)
+# 5. Runtimes (Mise)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 configure_runtimes() {
     header "Runtimes"
 
-    if ! command -v mise >/dev/null 2>&1; then
+    if ! command -v mise >/dev/null 2>&1;
+ then
         msg_info "Installing Mise..."
         curl -fsSL https://mise.run | sh >/dev/null 2>&1
         export PATH="$HOME/.local/bin:$PATH"
@@ -154,12 +212,14 @@ configure_runtimes() {
         mise use -g python@3.12 node@lts -y >/dev/null 2>&1
         
         # Python tools
-        if ! command -v uv >/dev/null 2>&1; then
+        if ! command -v uv >/dev/null 2>&1;
+ then
             mise exec python@3.12 -- pip install uv >/dev/null 2>&1
         fi
         
         # Node tools
-        if ! command -v pnpm >/dev/null 2>&1; then
+        if ! command -v pnpm >/dev/null 2>&1;
+ then
              mise exec node@lts -- npm install -g pnpm >/dev/null 2>&1
         fi
     ) &
@@ -172,7 +232,7 @@ configure_runtimes() {
 }
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 5. Shell Configuration
+# 6. Shell Configuration
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 configure_shell() {
@@ -195,7 +255,8 @@ configure_shell() {
     fi
 
     # Ensure in /etc/shells
-    if ! grep -q "$target_shell" /etc/shells; then
+    if ! grep -q "$target_shell" /etc/shells;
+ then
         msg_info "Adding $target_shell to /etc/shells..."
         if command -v sudo >/dev/null 2>&1;
         then
@@ -243,6 +304,7 @@ configure_shell() {
 main() {
     init_environment
     install_packages
+    install_flatpaks
     configure_security
     configure_runtimes
     configure_shell
