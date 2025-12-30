@@ -1,4 +1,35 @@
+# --- OS Generated ---
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Editor / IDE ---
+.idea/
+.vscode/
 *.swp
+*.swo
+*~
+*.bak
+
+# --- Logs & Temp ---
 *.log
+*.tmp
+*.out
+*.pid
+tmp/
+temp/
+
+# --- Chezmoi ---
+# The generated config file should not be committed (contains local secrets/state)
 .chezmoi.toml
+
+# --- Private Keys / Secrets (Safety net) ---
+*.key
+*.pem
+private_key
+id_rsa
+id_ed25519

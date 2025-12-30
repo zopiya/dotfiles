@@ -1,13 +1,17 @@
 # Linux Brewfile
 
-# 1. Shell Essentials
+# Shell Essentials
+# Core shell environment, prompt, and history management
 brew "zsh"
 brew "starship"
 brew "sheldon"
 brew "zoxide"
 brew "fzf"
+brew "atuin"
+brew "fastfetch"
 
-# 2. Modern Unix Tools
+# Modern Unix Tools
+# Rust-rewritten replacements for classic CLI commands
 brew "bat"
 brew "eza"
 brew "fd"
@@ -15,32 +19,58 @@ brew "ripgrep"
 brew "jq"
 brew "yq"
 brew "git-delta"
+brew "dust"
+brew "bottom"
+brew "procs"
+brew "sd"
+brew "choose"
+brew "tldr"
 
-# 3. Development & Productivity
+# Development & Productivity
+# Editors, multiplexers, and AI-powered coding assistants
 brew "git"
 brew "gh"
 brew "lazygit"
 brew "neovim"
 brew "tmux"
+brew "zellij"
 brew "yazi"
+brew "just"
+brew "watchexec"
+brew "aider"
 
-# 4. Network & Transfer
+# Containers & Cloud
+# Kubernetes, Docker, and container exploration tools
+brew "k9s"
+brew "lazydocker"
+brew "dive"
+
+# Network & Transfer
+# Modern networking utilities, API clients, and diagnostics
 brew "curl"
 brew "wget"
 brew "httpie"
+brew "xh"
+brew "doggo"
+brew "gping"
+brew "trippy"
 
-# 5. Runtime & Package Management
+# Runtime & Package Management
+# Version managers and specialized package installers
 brew "mise"
 brew "uv"
 brew "pnpm"
 
-# 6. Security & Identity
+# Security & Identity
+# Encryption, GPG management, and secrets detection
 brew "gnupg"
 brew "age"
 brew "ykman"
 brew "1password-cli"
+brew "gitleaks"
 
-# 7. System Maintenance
+# System Maintenance
+# Dotfiles management, system updates, and backups
 brew "chezmoi"
 brew "topgrade"
 brew "restic"
