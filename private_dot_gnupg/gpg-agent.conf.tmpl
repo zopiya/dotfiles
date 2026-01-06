@@ -1,27 +1,36 @@
-# Enable SSH support (allows using GPG key for SSH authentication)
-enable-ssh-support
+# ------------------------------------------------------------------------------
+# GPG Agent Configuration
+# ------------------------------------------------------------------------------
 
-# Cache settings
-# default-cache-ttl: 1 hour (3600 seconds)
-# max-cache-ttl: 1 day (86400 seconds)
+# --- Cache Settings ---
+# PIN is cached for 1 hour (3600s).
+# Signature verification still requires physical touch (UIF) on YubiKey.
 default-cache-ttl 3600
 max-cache-ttl 86400
 
+# --- Compatibility ---
+# Essential for VS Code, script usage, or non-GUI environments.
+allow-loopback-pinentry
+
+# --- Pinentry Program Selection ---
+# Automatically selects the best pinentry program based on OS.
+
 {{- if eq .chezmoi.os "darwin" }}
-# macOS: Use pinentry-mac from Homebrew (GUI password prompt)
+# macOS: Use Homebrew pinentry-mac
 {{-   if eq .chezmoi.arch "arm64" }}
-pinentry-program /opt/homebrew/bin/pinentry-mac  # Apple Silicon
+pinentry-program /opt/homebrew/bin/pinentry-mac
 {{-   else }}
-pinentry-program /usr/local/bin/pinentry-mac      # Intel Mac
+pinentry-program /usr/local/bin/pinentry-mac
 {{-   end }}
-{{- else }}
-# Linux: Dynamic pinentry detection with fallback chain
-# Priority: Homebrew (shared) > Homebrew (user) > System
+
+{{- else if eq .chezmoi.os "linux" }}
+# Linux: Priority Homebrew > System Default
 {{-   if stat "/home/linuxbrew/.linuxbrew/bin/pinentry" }}
 pinentry-program /home/linuxbrew/.linuxbrew/bin/pinentry
 {{-   else if stat (printf "%s/.linuxbrew/bin/pinentry" .chezmoi.homeDir) }}
 pinentry-program {{ .chezmoi.homeDir }}/.linuxbrew/bin/pinentry
 {{-   else }}
-pinentry-program /usr/bin/pinentry  # System fallback
+pinentry-program /usr/bin/pinentry
 {{-   end }}
+
 {{- end }}
