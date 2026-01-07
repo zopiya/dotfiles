@@ -1,0 +1,107 @@
+# ==============================================================================
+# Lefthook Configuration
+# ==============================================================================
+# Git hooks for homeup dotfiles project.
+# Install: lefthook install
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Pre-commit Hooks
+# ------------------------------------------------------------------------------
+pre-commit:
+  parallel: true
+  commands:
+    shellcheck:
+      glob: "*.sh"
+      run: shellcheck {staged_files}
+
+    chezmoi-verify:
+      run: |
+        if command -v chezmoi &> /dev/null; then
+          chezmoi verify --source . 2>/dev/null || true
+        fi
+
+    template-check:
+      glob: "*.tmpl"
+      run: |
+        for file in {staged_files}; do
+          if ! chezmoi execute-template < "$file" > /dev/null 2>&1; then
+            echo "Template error: $file"
+            exit 1
+          fi
+        done
+
+    trailing-whitespace:
+      run: |
+        for file in {staged_files}; do
+          if grep -q '[[:space:]]$' "$file" 2>/dev/null; then
+            echo "Trailing whitespace: $file"
+            # Auto-fix (optional)
+            # sed -i '' 's/[[:space:]]*$//' "$file"
+          fi
+        done
+
+    no-secrets:
+      run: |
+        for file in {staged_files}; do
+          if grep -qiE "(password|secret|token|api_key)\s*=" "$file" 2>/dev/null; then
+            if ! echo "$file" | grep -qE "\.tmpl$|\.example$"; then
+              echo "Potential secret in: $file"
+              exit 1
+            fi
+          fi
+        done
+
+# ------------------------------------------------------------------------------
+# Commit Message Hook
+# ------------------------------------------------------------------------------
+commit-msg:
+  commands:
+    format-check:
+      run: |
+        msg=$(cat {1})
+        # Check message length (subject line <= 72 chars)
+        first_line=$(echo "$msg" | head -n1)
+        if [ ${#first_line} -gt 72 ]; then
+          echo "Commit subject too long (${#first_line} > 72 chars)"
+          exit 1
+        fi
+        # Check for empty message
+        if [ -z "$(echo "$msg" | grep -v '^#' | tr -d '[:space:]')" ]; then
+          echo "Empty commit message"
+          exit 1
+        fi
+
+# ------------------------------------------------------------------------------
+# Pre-push Hooks
+# ------------------------------------------------------------------------------
+pre-push:
+  parallel: true
+  commands:
+    lint-all:
+      run: |
+        echo "Running full lint..."
+        find . -name "*.sh" -type f ! -path "./.git/*" | while read -r file; do
+          shellcheck "$file" 2>/dev/null || true
+        done
+
+    template-validate:
+      run: |
+        echo "Validating all templates..."
+        for profile in workstation codespace server; do
+          export HOMEUP_PROFILE=$profile
+          if command -v chezmoi &> /dev/null; then
+            chezmoi init --source . --destination /tmp/chezmoi-validate-$profile --dry-run 2>/dev/null || {
+              echo "Template validation failed for profile: $profile"
+              exit 1
+            }
+          fi
+        done
+        echo "All templates valid"
+
+# ------------------------------------------------------------------------------
+# Skip Settings
+# ------------------------------------------------------------------------------
+skip_output:
+  - meta
+  - summary
