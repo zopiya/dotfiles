@@ -130,27 +130,19 @@ profile-server:
 # ------------------------------------------------------------------------------
 
 # Install packages for current profile
-packages profile="workstation":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Installing packages for profile: {{profile}}"
-    brew bundle --file=packages/Brewfile.core --no-lock
-    case "{{profile}}" in
-        workstation)
-            if [[ "$(uname -s)" == "Darwin" ]]; then
-                brew bundle --file=packages/Brewfile.macos --no-lock
-            else
-                brew bundle --file=packages/Brewfile.linux --no-lock
-            fi
-            ;;
-        codespace)
-            brew bundle --file=packages/Brewfile.codespace --no-lock
-            ;;
-        server)
-            brew bundle --file=packages/Brewfile.server --no-lock
-            ;;
-    esac
-    echo "Done."
+install-packages:
+    @echo "Installing packages..."
+    brew bundle --file=packages/Brewfile.core
+    @if [ "$(uname)" = "Darwin" ]; then \
+        brew bundle --file=packages/Brewfile.macos; \
+    else \
+        brew bundle --file=packages/Brewfile.linux; \
+    fi
+    @if [ "$HOMEUP_PROFILE" = "codespace" ]; then \
+        brew bundle --file=packages/Brewfile.codespace; \
+    elif [ "$HOMEUP_PROFILE" = "server" ]; then \
+        brew bundle --file=packages/Brewfile.server; \
+    fi
 
 # List all brew packages
 packages-list:

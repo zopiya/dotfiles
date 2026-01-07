@@ -534,7 +534,7 @@ jobs:
 
       - name: Install chezmoi
         run: |
-          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+          sudo snap install chezmoi --classic
 
       - name: Validate Template Syntax
         run: |

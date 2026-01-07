@@ -798,18 +798,25 @@ install_chezmoi() {
 
     require_cmd brew
 
+    local log_file
+    log_file=$(mktemp)
+
     (
-        brew install chezmoi >/dev/null 2>&1
+        HOMEBREW_NO_AUTO_UPDATE=0 brew install chezmoi >"$log_file" 2>&1
     ) &
 
     if spinner $! "Installing chezmoi"; then
         if command -v chezmoi &>/dev/null; then
             msg_ok "chezmoi installed"
+            rm -f "$log_file"
             return 0
         fi
     fi
 
-    die "chezmoi installation failed"
+    msg_fail "chezmoi installation failed. Output:"
+    cat "$log_file"
+    rm -f "$log_file"
+    exit 1
 }
 
 # ------------------------------------------------------------------------------

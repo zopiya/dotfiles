@@ -138,14 +138,14 @@ install_packages() {
         msg_info "Installing: $(basename "$brewfile")"
 
         (
-            HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="$brewfile" --no-lock >/dev/null 2>&1
+            HOMEBREW_NO_AUTO_UPDATE=1 brew bundle --file="$brewfile" >/dev/null 2>&1
         ) &
 
         if spinner $! "Processing $(basename "$brewfile")"; then
             msg_ok "$(basename "$brewfile") completed"
         else
             msg_fail "$(basename "$brewfile") failed. Retrying with verbose output..."
-            brew bundle --file="$brewfile" --no-lock || true
+            brew bundle --file="$brewfile" || true
         fi
     done
 }
