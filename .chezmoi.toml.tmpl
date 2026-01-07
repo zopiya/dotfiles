@@ -28,7 +28,7 @@ sourceDir = "{{ .chezmoi.homeDir }}/.local/share/chezmoi"
 # --- Merge ---
 [merge]
     command = "nvim"
-    args = ["-d", "{{ .Destination }}", "{{ .Source }}", "{{ .Target }}"]
+    args = ["-d", "{{ `{{ .Destination }}` }}", "{{ `{{ .Source }}` }}", "{{ `{{ .Target }}` }}"]
 
 # --- Update ---
 [update]

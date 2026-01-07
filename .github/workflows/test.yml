@@ -5,9 +5,9 @@
 #
 # Matrix:
 #   - macOS + workstation
-#   - Linux (Ubuntu) + workstation
-#   - Linux (Ubuntu) + codespace
-#   - Linux (Ubuntu) + server
+#   - Ubuntu + workstation
+#   - Ubuntu + codespace
+#   - Ubuntu + server
 #   - Fedora + workstation
 #   - Fedora + codespace
 #   - Fedora + server
@@ -139,10 +139,10 @@ jobs:
           echo "=== Workstation Profile Verified ==="
 
   # ----------------------------------------------------------------------------
-  # Linux Matrix (workstation, codespace, server)
+  # Ubuntu Matrix (workstation, codespace, server)
   # ----------------------------------------------------------------------------
-  test-linux:
-    name: Linux / ${{ matrix.profile }}
+  test-ubuntu:
+    name: Ubuntu / ${{ matrix.profile }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -176,13 +176,13 @@ jobs:
         run: |
           sudo useradd -m -s /bin/bash testuser
           echo "testuser ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/testuser
+          sudo chmod +x bootstrap.sh
           sudo chown -R testuser:testuser $GITHUB_WORKSPACE
 
       - name: Run bootstrap.sh
         id: bootstrap
         if: steps.setup_user.outcome == 'success'
         run: |
-          chmod +x bootstrap.sh
           sudo -u testuser bash -c "
             export HOMEUP_PROFILE=${{ matrix.profile }}
             export NONINTERACTIVE=1
@@ -376,13 +376,13 @@ jobs:
         run: |
           useradd -m -s /bin/bash testuser
           echo "testuser ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/testuser
+          chmod +x bootstrap.sh
           chown -R testuser:testuser $GITHUB_WORKSPACE
 
       - name: Run bootstrap.sh
         id: bootstrap
         if: steps.setup_user.outcome == 'success'
         run: |
-          chmod +x bootstrap.sh
           sudo -u testuser bash -c "
             export HOMEUP_PROFILE=${{ matrix.profile }}
             export NONINTERACTIVE=1
