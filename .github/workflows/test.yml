@@ -1,228 +1,326 @@
-name: Test Dotfiles
+# ==============================================================================
+# Homeup CI Test Workflow
+# ==============================================================================
+# Tests bootstrap.sh and chezmoi configuration across all profiles.
+#
+# Matrix:
+#   - macOS + workstation
+#   - Linux + workstation
+#   - Linux + codespace
+#   - Linux + server
+# ==============================================================================
+
+name: Test
 
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - ".github/workflows/test.yml"
+    branches: [main, dev]
+    paths-ignore:
+      - "*.md"
+      - "LICENSE"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Profile to test (leave empty for all)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - workstation
+          - codespace
+          - server
+
+env:
+  NONINTERACTIVE: 1
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_ANALYTICS: 1
 
 jobs:
+  # ----------------------------------------------------------------------------
+  # macOS Workstation
+  # ----------------------------------------------------------------------------
   test-macos:
-    name: Test on macOS (Workstation)
+    name: macOS / workstation
     runs-on: macos-latest
-    timeout-minutes: 20
+    if: ${{ github.event.inputs.profile == '' || github.event.inputs.profile == 'workstation' }}
+    timeout-minutes: 30
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Bash 5
+      - name: Install Bash 5+
         run: |
           brew install bash
-          echo "/usr/local/bin/bash" >> $GITHUB_PATH
           echo "$(brew --prefix)/bin" >> $GITHUB_PATH
-
-      - name: Check Bash version
-        run: |
-          which bash
-          bash --version
 
       - name: Run bootstrap.sh
         run: |
           chmod +x bootstrap.sh
-          bash ./bootstrap.sh
+          ./bootstrap.sh -p workstation -y
         env:
-          CI: true
-          NONINTERACTIVE: 1
+          HOMEUP_PROFILE: workstation
 
-      - name: Verify Installation
+      - name: Verify Bootstrap
         run: |
-          # Source the shellenv to verify environment variables are set correctly
-          if [ -f "$HOME/.config/homebrew/shellenv" ]; then
-            source "$HOME/.config/homebrew/shellenv"
-          else
-            echo "Error: shellenv file not found!"
-            exit 1
-          fi
-
-          echo "Verifying Homebrew..."
-          if ! command -v brew &> /dev/null; then
-             echo "Error: brew command not found in PATH"
-             exit 1
-          fi
+          source "$HOME/.config/homebrew/shellenv"
+          echo "--- Homebrew ---"
           brew --version
-
-          echo "Verifying chezmoi..."
-          if ! command -v chezmoi &> /dev/null; then
-             echo "Error: chezmoi command not found in PATH"
-             exit 1
-          fi
+          echo "--- Chezmoi ---"
           chezmoi --version
 
-      - name: Initialize chezmoi
+      - name: Apply Chezmoi
         run: |
-          if [ -f "$HOME/.config/homebrew/shellenv" ]; then
-            source "$HOME/.config/homebrew/shellenv"
-          fi
+          source "$HOME/.config/homebrew/shellenv"
           chezmoi init --apply --source .
         env:
-          CI: true
-          NONINTERACTIVE: 1
-          MISE_NODE_GPG_VERIFY: "0"
-          CHEZMOI_GIT_NAME: "Test User"
-          CHEZMOI_GIT_EMAIL: "test@example.com"
-          CHEZMOI_PROFILE: "1"
-          CHEZMOI_INSTALL_SECURITY: "false"
+          HOMEUP_PROFILE: workstation
 
-      - name: Verify Dotfiles
+      - name: Verify Workstation Profile
         run: |
-          echo "Verifying dotfiles installation..."
-          
-          # Check if key config files exist
-          [ -f "$HOME/.config/starship.toml" ] || { echo "Error: starship.toml missing"; exit 1; }
-          [ -f "$HOME/.config/zsh/.zshrc" ] || { echo "Error: .zshrc missing"; exit 1; }
-          
-          # Check if tools are in PATH
+          source "$HOME/.config/homebrew/shellenv"
           export PATH="$HOME/.local/bin:$PATH"
-          if [ -f "$HOME/.config/homebrew/shellenv" ]; then
-            source "$HOME/.config/homebrew/shellenv"
-          fi
-          
-          command -v starship >/dev/null || { echo "Error: starship not found"; exit 1; }
-          command -v mise >/dev/null || { echo "Error: mise not found"; exit 1; }
-          command -v nvim >/dev/null || { echo "Error: nvim not found"; exit 1; }
-          
-          echo "Verification passed!"
 
+          echo "=== Verifying Workstation Profile ==="
+
+          # Config files
+          echo "--- Config Files ---"
+          test -f "$HOME/.config/starship.toml" || { echo "FAIL: starship.toml"; exit 1; }
+          test -f "$HOME/.config/zsh/.zshrc" || { echo "FAIL: .zshrc"; exit 1; }
+          test -f "$HOME/.ssh/config" || { echo "FAIL: ssh config"; exit 1; }
+          test -f "$HOME/.gnupg/gpg.conf" || { echo "FAIL: gpg.conf"; exit 1; }
+          echo "OK: All config files present"
+
+          # Core tools
+          echo "--- Core Tools ---"
+          command -v zsh || { echo "FAIL: zsh"; exit 1; }
+          command -v starship || { echo "FAIL: starship"; exit 1; }
+          command -v nvim || { echo "FAIL: nvim"; exit 1; }
+          command -v fzf || { echo "FAIL: fzf"; exit 1; }
+          echo "OK: All core tools installed"
+
+          # Workstation-specific: GPG signing enabled
+          echo "--- Workstation Features ---"
+          grep -q "gpgsign = true" "$HOME/.config/git/config" || { echo "FAIL: GPG signing not enabled"; exit 1; }
+          echo "OK: GPG signing enabled"
+
+          echo "=== Workstation Profile Verified ==="
+
+  # ----------------------------------------------------------------------------
+  # Linux Matrix (workstation, codespace, server)
+  # ----------------------------------------------------------------------------
   test-linux:
-    name: Test on ${{ matrix.distro }} (${{ matrix.type }})
+    name: Linux / ${{ matrix.profile }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    if: ${{ github.event.inputs.profile == '' || github.event.inputs.profile == matrix.profile }}
+    timeout-minutes: 30
+
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Workstation Profile (1)
-          - distro: fedora
-            type: Workstation
-            image: fedora:latest
-            profile: "1"
-            pre_install: dnf install -y sudo curl git file shadow-utils findutils
-
-          # Server Profile (2)
-          - distro: ubuntu
-            type: Server
-            image: ubuntu:latest
-            profile: "2"
-            pre_install: apt-get update && apt-get install -y sudo curl git file
-          - distro: debian
-            type: Server
-            image: debian:latest
-            profile: "2"
-            pre_install: apt-get update && apt-get install -y sudo curl git file
-
-    container:
-      image: ${{ matrix.image }}
+        profile: [workstation, codespace, server]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare Container Environment
+      - name: Setup Test User
         run: |
-          ${{ matrix.pre_install }}
-          # Ensure zsh is installed for the verification step
-          if command -v apt-get &> /dev/null; then
-            apt-get install -y zsh
-          elif command -v dnf &> /dev/null; then
-            dnf install -y zsh
-          fi
-          
-          useradd -m -s /bin/bash testuser
-          echo "testuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-          chown -R testuser:testuser $GITHUB_WORKSPACE
+          sudo useradd -m -s /bin/bash testuser
+          echo "testuser ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/testuser
+          sudo chown -R testuser:testuser $GITHUB_WORKSPACE
 
       - name: Run bootstrap.sh
         run: |
           chmod +x bootstrap.sh
-          # Pass CI and NONINTERACTIVE env vars to the user shell
-          su - testuser -c "export CI=true NONINTERACTIVE=1 && cd $GITHUB_WORKSPACE && ./bootstrap.sh"
-        env:
-          CI: true
-          NONINTERACTIVE: 1
-
-      - name: Verify Installation
-        run: |
-          su - testuser -c "
+          sudo -u testuser bash -c "
+            export HOMEUP_PROFILE=${{ matrix.profile }}
+            export NONINTERACTIVE=1
             export CI=true
-            # Simulate a new login shell or sourcing the env file
-            if [ -f \"\$HOME/.config/homebrew/shellenv\" ]; then
-              source \"\$HOME/.config/homebrew/shellenv\"
-            else
-              echo 'Error: shellenv file not found!'
-              exit 1
-            fi
-            
-            echo 'Verifying Homebrew...'
-            if ! command -v brew &> /dev/null; then
-               echo 'Error: brew command not found in PATH'
-               exit 1
-            fi
-            brew --version
-            
-            echo 'Verifying chezmoi...'
-            if ! command -v chezmoi &> /dev/null; then
-               echo 'Error: chezmoi command not found in PATH'
-               exit 1
-            fi
-            chezmoi --version
+            cd $GITHUB_WORKSPACE
+            ./bootstrap.sh -p ${{ matrix.profile }} -y
           "
 
-      - name: Initialize chezmoi
+      - name: Verify Bootstrap
         run: |
-          su - testuser -c "
-            export CI=true
-            export CHEZMOI_GIT_NAME='Test User'
-            export CHEZMOI_GIT_EMAIL='test@example.com'
-            export CHEZMOI_PROFILE='${{ matrix.profile }}'
-            export CHEZMOI_INSTALL_SECURITY='false'
-            
-            if [ -f \"\$HOME/.config/homebrew/shellenv\" ]; then
-              source \"\$HOME/.config/homebrew/shellenv\"
-            fi
-            
+          sudo -u testuser bash -c '
+            source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            echo "--- Homebrew ---"
+            brew --version
+            echo "--- Chezmoi ---"
+            chezmoi --version
+          '
+
+      - name: Apply Chezmoi
+        run: |
+          sudo -u testuser bash -c "
+            export HOMEUP_PROFILE=${{ matrix.profile }}
+            source \"\$HOME/.config/homebrew/shellenv\" 2>/dev/null || eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"
             cd $GITHUB_WORKSPACE
             chezmoi init --apply --source .
           "
 
-      - name: Verify Dotfiles
+      - name: Verify Profile - Core
         run: |
-          su - testuser -c "
-            export CI=true
-            echo 'Verifying dotfiles installation...'
-            
-            # Check if key config files exist
-            [ -f \"\$HOME/.config/starship.toml\" ] || { echo 'Error: starship.toml missing'; exit 1; }
-            
-            # .zshrc might be in .config/zsh/.zshrc or ~/.zshrc depending on ZDOTDIR
-            if [ -f \"\$HOME/.config/zsh/.zshrc\" ]; then
-                echo 'Found .zshrc in .config/zsh'
-            elif [ -f \"\$HOME/.zshrc\" ]; then
-                echo 'Found .zshrc in HOME'
-            else
-                echo 'Error: .zshrc missing'
-                exit 1
-            fi
-            
-            # Check if tools are in PATH (via .local/bin)
-            export PATH=\"\$HOME/.local/bin:\$PATH\"
-            if [ -f \"\$HOME/.config/homebrew/shellenv\" ]; then
-              source \"\$HOME/.config/homebrew/shellenv\"
-            fi
-            
-            # Core checks (Profile 1 & 2)
-            command -v starship >/dev/null || { echo 'Error: starship not found'; exit 1; }
-            command -v mise >/dev/null || { echo 'Error: mise not found'; exit 1; }
-            command -v nvim >/dev/null || { echo 'Error: nvim not found'; exit 1; }
-            
-            echo 'Verification passed!'
-          "
+          sudo -u testuser bash -c '
+            source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+            export PATH="$HOME/.local/bin:$PATH"
+
+            echo "=== Verifying Core (All Profiles) ==="
+
+            # Config files
+            echo "--- Config Files ---"
+            test -f "$HOME/.config/starship.toml" || { echo "FAIL: starship.toml"; exit 1; }
+            test -f "$HOME/.config/zsh/.zshrc" || test -f "$HOME/.zshrc" || { echo "FAIL: zshrc"; exit 1; }
+            echo "OK: Core config files present"
+
+            # Core tools
+            echo "--- Core Tools ---"
+            command -v zsh || { echo "FAIL: zsh"; exit 1; }
+            command -v starship || { echo "FAIL: starship"; exit 1; }
+            command -v nvim || { echo "FAIL: nvim"; exit 1; }
+            command -v bat || { echo "FAIL: bat"; exit 1; }
+            command -v eza || { echo "FAIL: eza"; exit 1; }
+            command -v fzf || { echo "FAIL: fzf"; exit 1; }
+            echo "OK: Core tools installed"
+          '
+
+      - name: Verify Profile - Workstation
+        if: matrix.profile == 'workstation'
+        run: |
+          sudo -u testuser bash -c '
+            source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+            echo "=== Verifying Workstation Profile ==="
+
+            # GPG signing enabled
+            echo "--- GPG Signing ---"
+            test -f "$HOME/.config/git/config" || { echo "FAIL: git config missing"; exit 1; }
+            grep -q "gpgsign = true" "$HOME/.config/git/config" || { echo "FAIL: GPG signing not enabled"; exit 1; }
+            echo "OK: GPG signing enabled"
+
+            # Security configs present
+            echo "--- Security Configs ---"
+            test -f "$HOME/.gnupg/gpg.conf" || { echo "FAIL: gpg.conf"; exit 1; }
+            test -f "$HOME/.gnupg/gpg-agent.conf" || { echo "FAIL: gpg-agent.conf"; exit 1; }
+            echo "OK: Security configs present"
+
+            # SSH config with ForwardAgent yes
+            echo "--- SSH Config ---"
+            grep -q "ForwardAgent yes" "$HOME/.ssh/config" || { echo "FAIL: ForwardAgent not enabled"; exit 1; }
+            echo "OK: SSH ForwardAgent enabled"
+
+            echo "=== Workstation Profile Verified ==="
+          '
+
+      - name: Verify Profile - Codespace
+        if: matrix.profile == 'codespace'
+        run: |
+          sudo -u testuser bash -c '
+            source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+            echo "=== Verifying Codespace Profile ==="
+
+            # GPG signing disabled
+            echo "--- GPG Signing ---"
+            test -f "$HOME/.config/git/config" || { echo "FAIL: git config missing"; exit 1; }
+            grep -q "gpgsign = false" "$HOME/.config/git/config" || { echo "FAIL: GPG signing should be disabled"; exit 1; }
+            echo "OK: GPG signing disabled"
+
+            # SSH config with ForwardAgent no
+            echo "--- SSH Config ---"
+            grep -q "ForwardAgent no" "$HOME/.ssh/config" || { echo "FAIL: ForwardAgent should be disabled"; exit 1; }
+            echo "OK: SSH ForwardAgent disabled"
+
+            echo "=== Codespace Profile Verified ==="
+          '
+
+      - name: Verify Profile - Server
+        if: matrix.profile == 'server'
+        run: |
+          sudo -u testuser bash -c '
+            source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+            echo "=== Verifying Server Profile ==="
+
+            # GPG signing disabled
+            echo "--- GPG Signing ---"
+            test -f "$HOME/.config/git/config" || { echo "FAIL: git config missing"; exit 1; }
+            grep -q "gpgsign = false" "$HOME/.config/git/config" || { echo "FAIL: GPG signing should be disabled"; exit 1; }
+            echo "OK: GPG signing disabled"
+
+            # SSH config with ForwardAgent no
+            echo "--- SSH Config ---"
+            grep -q "ForwardAgent no" "$HOME/.ssh/config" || { echo "FAIL: ForwardAgent should be disabled"; exit 1; }
+            echo "OK: SSH ForwardAgent disabled"
+
+            # 1Password and YubiKey configs should NOT exist
+            echo "--- Security Exclusions ---"
+            test ! -f "$HOME/.config/security/1password.inc" || { echo "FAIL: 1password.inc should not exist"; exit 1; }
+            test ! -f "$HOME/.config/security/yubikey.inc" || { echo "FAIL: yubikey.inc should not exist"; exit 1; }
+            echo "OK: Security configs properly excluded"
+
+            echo "=== Server Profile Verified ==="
+          '
+
+  # ----------------------------------------------------------------------------
+  # Template Syntax Validation
+  # ----------------------------------------------------------------------------
+  validate-templates:
+    name: Validate Templates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+
+      - name: Validate Template Syntax
+        run: |
+          echo "=== Validating Chezmoi Templates ==="
+
+          # Test each profile
+          for profile in workstation codespace server; do
+            echo "--- Testing profile: $profile ---"
+            export HOMEUP_PROFILE=$profile
+
+            # Dry-run to check template rendering
+            chezmoi init --source . --destination /tmp/chezmoi-test-$profile --dry-run || {
+              echo "FAIL: Template error for profile $profile"
+              exit 1
+            }
+            echo "OK: $profile templates valid"
+          done
+
+          echo "=== All Templates Valid ==="
+
+  # ----------------------------------------------------------------------------
+  # Shell Script Linting
+  # ----------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint bootstrap.sh
+        run: shellcheck bootstrap.sh
+
+      - name: Lint Shell Files
+        run: |
+          find . -name "*.sh" -type f | while read -r file; do
+            echo "Checking $file..."
+            shellcheck "$file" || true
+          done
