@@ -5,9 +5,9 @@
 #
 # Matrix:
 #   - macOS + workstation
-#   - Ubuntu + workstation
-#   - Ubuntu + codespace
-#   - Ubuntu + server
+#   - Debian + workstation
+#   - Debian + codespace
+#   - Debian + server
 #   - Fedora + workstation
 #   - Fedora + codespace
 #   - Fedora + server
@@ -139,11 +139,14 @@ jobs:
           echo "=== Workstation Profile Verified ==="
 
   # ----------------------------------------------------------------------------
-  # Ubuntu Matrix (workstation, codespace, server)
+  # Debian Matrix (workstation, codespace, server)
   # ----------------------------------------------------------------------------
-  test-ubuntu:
-    name: Ubuntu / ${{ matrix.profile }}
+  test-debian:
+    name: Debian / ${{ matrix.profile }}
     runs-on: ubuntu-latest
+    container:
+      image: debian:latest
+      options: --user root
     timeout-minutes: 45
 
     strategy:
@@ -152,9 +155,25 @@ jobs:
         profile: [workstation, codespace, server]
 
     steps:
+      - name: Install Dependencies
+        id: install_deps
+        if: ${{ !github.event.inputs.profile || github.event.inputs.profile == matrix.profile }}
+        run: |
+          apt-get update
+          apt-get install -y \
+            git \
+            sudo \
+            curl \
+            wget \
+            procps \
+            hostname \
+            ca-certificates \
+            locales \
+            file
+
       - name: Checkout
         id: checkout
-        if: ${{ !github.event.inputs.profile || github.event.inputs.profile == matrix.profile }}
+        if: steps.install_deps.outcome == 'success'
         uses: actions/checkout@v4
 
       - name: Cache Homebrew
@@ -165,35 +184,29 @@ jobs:
           path: |
             /home/linuxbrew/.linuxbrew
             ~/.cache/Homebrew
-          key: ${{ runner.os }}-homebrew-${{ matrix.profile }}-${{ hashFiles('bootstrap.sh') }}
+          key: debian-homebrew-${{ matrix.profile }}-${{ hashFiles('bootstrap.sh') }}
           restore-keys: |
-            ${{ runner.os }}-homebrew-${{ matrix.profile }}-
-            ${{ runner.os }}-homebrew-
+            debian-homebrew-${{ matrix.profile }}-
+            debian-homebrew-
 
       - name: Setup Test User
         id: setup_user
         if: steps.checkout.outcome == 'success'
         run: |
-          sudo useradd -m -s /bin/bash testuser
-          echo "testuser ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/testuser
-          sudo cp -r $GITHUB_WORKSPACE /tmp/dotfiles
-          sudo chown -R testuser:testuser /tmp/dotfiles
-          sudo chmod +x /tmp/dotfiles/bootstrap.sh
-          # Fix Homebrew permissions for testuser
-          if [ -d "/home/linuxbrew/.linuxbrew" ]; then
-            sudo chown -R testuser:testuser /home/linuxbrew/.linuxbrew
-          fi
+          useradd -m -s /bin/bash testuser
+          echo "testuser ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/testuser
+          chmod +x bootstrap.sh
+          chown -R testuser:testuser $GITHUB_WORKSPACE
 
       - name: Run bootstrap.sh
         id: bootstrap
         if: steps.setup_user.outcome == 'success'
         run: |
           sudo -u testuser bash -c "
-            export HOME=/home/testuser
             export HOMEUP_PROFILE=${{ matrix.profile }}
             export NONINTERACTIVE=1
             export CI=true
-            cd /tmp/dotfiles
+            cd $GITHUB_WORKSPACE
             ./bootstrap.sh -p ${{ matrix.profile }} -y
           "
 
@@ -202,7 +215,6 @@ jobs:
         if: steps.bootstrap.outcome == 'success'
         run: |
           sudo -u testuser bash -c '
-            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             echo "--- Homebrew ---"
             brew --version
@@ -215,10 +227,9 @@ jobs:
         if: steps.verify_bootstrap.outcome == 'success'
         run: |
           sudo -u testuser bash -c "
-            export HOME=/home/testuser
             export HOMEUP_PROFILE=${{ matrix.profile }}
             source \"\$HOME/.config/homebrew/shellenv\" 2>/dev/null || eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"
-            cd /tmp/dotfiles
+            cd $GITHUB_WORKSPACE
             chezmoi init --apply --source .
           "
 
@@ -227,7 +238,6 @@ jobs:
         if: steps.apply_chezmoi.outcome == 'success'
         run: |
           sudo -u testuser bash -c '
-            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             export PATH="$HOME/.local/bin:$PATH"
 
@@ -254,7 +264,6 @@ jobs:
         if: ${{ matrix.profile == 'workstation' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
-            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Workstation Profile ==="
@@ -283,7 +292,6 @@ jobs:
         if: ${{ matrix.profile == 'codespace' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
-            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Codespace Profile ==="
@@ -306,7 +314,6 @@ jobs:
         if: ${{ matrix.profile == 'server' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
-            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Server Profile ==="
@@ -485,7 +492,6 @@ jobs:
         if: ${{ matrix.profile == 'codespace' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
-            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Codespace Profile ==="
@@ -508,7 +514,6 @@ jobs:
         if: ${{ matrix.profile == 'server' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
-            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Server Profile ==="
