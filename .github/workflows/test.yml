@@ -189,6 +189,7 @@ jobs:
         if: steps.setup_user.outcome == 'success'
         run: |
           sudo -u testuser bash -c "
+            export HOME=/home/testuser
             export HOMEUP_PROFILE=${{ matrix.profile }}
             export NONINTERACTIVE=1
             export CI=true
@@ -201,6 +202,7 @@ jobs:
         if: steps.bootstrap.outcome == 'success'
         run: |
           sudo -u testuser bash -c '
+            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             echo "--- Homebrew ---"
             brew --version
@@ -213,6 +215,7 @@ jobs:
         if: steps.verify_bootstrap.outcome == 'success'
         run: |
           sudo -u testuser bash -c "
+            export HOME=/home/testuser
             export HOMEUP_PROFILE=${{ matrix.profile }}
             source \"\$HOME/.config/homebrew/shellenv\" 2>/dev/null || eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"
             cd /tmp/dotfiles
@@ -224,6 +227,7 @@ jobs:
         if: steps.apply_chezmoi.outcome == 'success'
         run: |
           sudo -u testuser bash -c '
+            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
             export PATH="$HOME/.local/bin:$PATH"
 
@@ -250,6 +254,7 @@ jobs:
         if: ${{ matrix.profile == 'workstation' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
+            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Workstation Profile ==="
@@ -278,6 +283,7 @@ jobs:
         if: ${{ matrix.profile == 'codespace' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
+            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Codespace Profile ==="
@@ -300,6 +306,7 @@ jobs:
         if: ${{ matrix.profile == 'server' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
+            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Server Profile ==="
@@ -478,6 +485,7 @@ jobs:
         if: ${{ matrix.profile == 'codespace' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
+            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Codespace Profile ==="
@@ -500,6 +508,7 @@ jobs:
         if: ${{ matrix.profile == 'server' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
+            export HOME=/home/testuser
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
             echo "=== Verifying Server Profile ==="
