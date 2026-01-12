@@ -34,8 +34,10 @@ Include ~/.ssh/config.local
 Host github.com
     User git
     ServerAliveInterval 30
+{{- if $isWorkstation }}
     # Use standard key for public git (ignores CA cert automatically on GitHub side)
     IdentityFile ~/.ssh/MainZopiyaSSH
+{{- end }}
 
 {{- if $isWorkstation }}
 

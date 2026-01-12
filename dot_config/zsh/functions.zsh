@@ -69,6 +69,7 @@ unbak() {
 
     # SC2039/SC3054: Disable warnings for Zsh-specific glob qualifiers
     # shellcheck disable=SC2039,SC3054
+    # Ensure glob expansion happens correctly in array assignment
     latest=("${1}.bak."*(.om[1]N))
 
     # SC2128/SC2199/SC2145: Use [*] to expand array as a single string (safe here as we strictly target 1 file)
