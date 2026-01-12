@@ -39,6 +39,18 @@ layout {
                 }
             }
         }
+
+        // Floating Panes (Moved inside Tab for proper parsing)
+        floating_panes {
+            pane {
+                name "Quick Command"
+                cwd "~/workspace"
+                x "10%"
+                y "10%"
+                width "80%"
+                height "80%"
+            }
+        }
     }
 
     // =========================================================================
@@ -152,20 +164,6 @@ layout {
                     name "Output"
                 }
             }
-        }
-    }
-
-    // =========================================================================
-    // Floating Panes - Quick Actions
-    // =========================================================================
-    floating_panes {
-        pane {
-            name "Quick Command"
-            cwd "~/workspace"
-            x "10%"
-            y "10%"
-            width "80%"
-            height "80%"
         }
     }
 
