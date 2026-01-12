@@ -1,16 +1,42 @@
 # ==============================================================================
-# Server Brewfile - Minimal Environment
+# Brewfile.server - Minimal Server Environment
 # ==============================================================================
-# Essential tools for server administration and CI/CD runners.
-# Core packages are inherited from Brewfile.core.
+# Essential tools for headless Linux servers, VPS, and CI/CD runners.
+# This is a minimal supplement to Brewfile.core for production environments.
+#
+# This file contains INCREMENTAL packages beyond Brewfile.core.
+# All core utilities (git, neovim, btop, etc.) are inherited from core.
+#
+# Design Principle: Zero Trust, Minimal Attack Surface
+# Focus on:
+#   1. System monitoring and diagnostics
+#   2. Log analysis and troubleshooting
+#   3. Backup and disaster recovery
+#   4. Security hardening (optional)
+#
+# Profile: server (headless Linux)
+# Dependencies: Brewfile.core
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Monitoring
+# Enhanced Monitoring
 # ------------------------------------------------------------------------------
 brew "bottom"
+brew "glances"
+brew "bmon"
 
 # ------------------------------------------------------------------------------
-# Backup
+# Log Management & Analysis
+# ------------------------------------------------------------------------------
+brew "lnav"
+
+# ------------------------------------------------------------------------------
+# Backup & Disaster Recovery
 # ------------------------------------------------------------------------------
 brew "restic"
+
+# ------------------------------------------------------------------------------
+# Security Hardening (Optional - Uncomment for Public Servers)
+# ------------------------------------------------------------------------------
+# brew "fail2ban"
+# brew "lynis"

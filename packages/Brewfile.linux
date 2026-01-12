@@ -1,79 +1,107 @@
 # ==============================================================================
-# Linux Brewfile - Workstation Profile
+# Brewfile.linux - Linux Workstation Profile
 # ==============================================================================
-# Full development environment with container tools. GUI apps via Flatpak.
+# Full-featured development environment for Linux workstations with enhanced
+# CLI utilities, complete container/K8s ecosystem, and development tools.
+#
+# This file contains INCREMENTAL packages beyond Brewfile.core.
+# All core utilities (git, neovim, fzf, etc.) are inherited from core.
+# GUI applications are managed via Flatpak (see flatpak.txt).
+#
+# Design Principle: AI-Native Modern Development Stack
+# Focus on:
+#   1. Cloud-native development (K8s, containers, IaC)
+#   2. AI-assisted workflows (aider, copilot-ready)
+#   3. Security-first approach (hardware keys, encryption)
+#   4. CLI-first with Flatpak for GUI (native Linux experience)
+#
+# Profile: workstation (Linux)
+# Dependencies: Brewfile.core
+# GUI Apps: flatpak.txt
 # ==============================================================================
 
 tap "1password/tap"
 
 # ------------------------------------------------------------------------------
-# Shell Essentials
+# Enhanced Shell & CLI
 # ------------------------------------------------------------------------------
-brew "zsh"
-brew "starship"
-brew "sheldon"
-brew "zoxide"
-brew "fzf"
-brew "atuin"
 brew "fastfetch"
-
-# ------------------------------------------------------------------------------
-# Modern Unix Tools
-# ------------------------------------------------------------------------------
-brew "bat"
-brew "eza"
-brew "fd"
-brew "ripgrep"
-brew "jq"
-brew "yq"
-brew "git-delta"
-brew "dust"
+brew "zellij"
 brew "bottom"
-brew "procs"
-brew "sd"
 brew "choose"
-brew "tldr"
 
 # ------------------------------------------------------------------------------
-# Development & Productivity
+# File Management & Previews
 # ------------------------------------------------------------------------------
-brew "git"
-brew "gh"
-brew "lazygit"
-brew "neovim"
-brew "tmux"
 brew "yazi"
-brew "just"
 brew "watchexec"
-brew "aider"
 
 # ------------------------------------------------------------------------------
-# Containers & Cloud
+# AI-Assisted Development
 # ------------------------------------------------------------------------------
-brew "k9s"
+brew "aider"
+brew "glow"
+brew "vhs"
+
+# ------------------------------------------------------------------------------
+# Container & Kubernetes Ecosystem
+# ------------------------------------------------------------------------------
 brew "lazydocker"
 brew "dive"
+brew "k9s"
+brew "helm"
+brew "kubectx"
+brew "stern"
+brew "kustomize"
 
 # ------------------------------------------------------------------------------
-# Network & Transfer
+# Infrastructure as Code & DevOps
 # ------------------------------------------------------------------------------
-brew "curl"
-brew "wget"
+brew "terraform"
+brew "ansible"
+brew "trivy"
+brew "grype"
+brew "syft"
+
+# ------------------------------------------------------------------------------
+# Network & API Tools
+# ------------------------------------------------------------------------------
 brew "httpie"
 brew "xh"
 brew "doggo"
 brew "gping"
 brew "trippy"
+brew "grpcurl"
+brew "evans"
 
 # ------------------------------------------------------------------------------
-# Runtime & Package Management
+# Database Tools
+# ------------------------------------------------------------------------------
+brew "usql"
+brew "pgcli"
+
+# ------------------------------------------------------------------------------
+# Runtime & Package Managers
 # ------------------------------------------------------------------------------
 brew "mise"
 brew "uv"
 brew "pnpm"
 
 # ------------------------------------------------------------------------------
-# Security & Identity
+# Performance & Code Analysis
+# ------------------------------------------------------------------------------
+brew "hyperfine"
+brew "tokei"
+brew "bandwhich"
+
+# ------------------------------------------------------------------------------
+# Git Enhancements
+# ------------------------------------------------------------------------------
+brew "git-cliff"
+brew "onefetch"
+
+# ------------------------------------------------------------------------------
+# Security & Encryption
 # ------------------------------------------------------------------------------
 brew "gnupg"
 brew "age"
@@ -82,8 +110,6 @@ brew "1password-cli"
 brew "gitleaks"
 
 # ------------------------------------------------------------------------------
-# System Maintenance
+# Backup & System Maintenance
 # ------------------------------------------------------------------------------
-brew "chezmoi"
-brew "topgrade"
 brew "restic"

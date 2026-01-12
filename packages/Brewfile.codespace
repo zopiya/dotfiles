@@ -1,38 +1,79 @@
 # ==============================================================================
-# Codespace Brewfile - Development Environment
+# Brewfile.codespace - Development Container Environment
 # ==============================================================================
-# CLI development tools. No GUI apps, no security hardware.
+# CLI-focused development tools for GitHub Codespaces, Dev Containers, DevBox,
+# and Docker development environments. No GUI apps, no hardware security keys.
+#
+# This file contains INCREMENTAL packages beyond Brewfile.core.
+# All core utilities (git, neovim, fzf, etc.) are inherited from core.
+#
+# Design Principle: Borrowed Trust, Cloud-Native Development
+# Focus on:
+#   1. AI-assisted development workflows
+#   2. Container and cloud-native tools
+#   3. Lightweight alternatives (faster startup)
+#   4. SSH agent forwarding (no local secrets)
+#
+# Profile: codespace (ephemeral containers)
+# Dependencies: Brewfile.core
+# Security: No private keys, no hardware tokens
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Additional CLI Tools
+# Enhanced Shell & CLI
 # ------------------------------------------------------------------------------
+brew "fastfetch"
+brew "zellij"
 brew "bottom"
 brew "choose"
-brew "fastfetch"
 
 # ------------------------------------------------------------------------------
-# Development Productivity
+# File Management & Monitoring
 # ------------------------------------------------------------------------------
 brew "yazi"
-brew "just"
 brew "watchexec"
-brew "aider"
 
 # ------------------------------------------------------------------------------
-# Runtime Management
+# AI-Assisted Development
+# ------------------------------------------------------------------------------
+brew "aider"
+brew "glow"
+
+# ------------------------------------------------------------------------------
+# Container & Cloud Tools
+# ------------------------------------------------------------------------------
+brew "lazydocker"
+brew "dive"
+brew "trivy"
+
+# ------------------------------------------------------------------------------
+# Network & API Tools
+# ------------------------------------------------------------------------------
+brew "httpie"
+brew "xh"
+brew "doggo"
+brew "gping"
+brew "grpcurl"
+brew "usql"
+
+# ------------------------------------------------------------------------------
+# Runtime & Package Managers
 # ------------------------------------------------------------------------------
 brew "mise"
 brew "uv"
 brew "pnpm"
 
 # ------------------------------------------------------------------------------
-# Network Tools
+# Performance & Analysis
 # ------------------------------------------------------------------------------
-brew "httpie"
-brew "xh"
-brew "doggo"
-brew "gping"
+brew "hyperfine"
+brew "tokei"
+
+# ------------------------------------------------------------------------------
+# Git Enhancements
+# ------------------------------------------------------------------------------
+brew "git-cliff"
+brew "onefetch"
 
 # ------------------------------------------------------------------------------
 # Security (No Hardware Keys)
@@ -40,3 +81,9 @@ brew "gping"
 brew "gnupg"
 brew "age"
 brew "gitleaks"
+
+# ------------------------------------------------------------------------------
+# Optional: 1Password CLI (if using service account)
+# ------------------------------------------------------------------------------
+# tap "1password/tap"
+# brew "1password-cli"

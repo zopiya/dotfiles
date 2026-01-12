@@ -1,61 +1,85 @@
 # ==============================================================================
-# Core Brewfile - Shared Across ALL Profiles
+# Brewfile.core - Essential Tools for ALL Environments
 # ==============================================================================
-# This file contains essential CLI tools that provide a consistent shell
-# experience across workstation, codespace, and server environments.
+# This file contains the minimal set of CLI tools required across all profiles.
+# These are core utilities that every machine (workstation/codespace/server) needs.
 #
-# Included in: workstation, codespace, server
+# Design Principle: Less is More
+# Only include tools that are:
+#   1. Used daily across all environments
+#   2. Have no platform-specific alternatives
+#   3. Are truly essential for basic shell workflow
+#
+# Profiles: workstation | codespace | server
+# Dependencies: None (this is the foundation)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Shell Essentials
+# Shell & Prompt
 # ------------------------------------------------------------------------------
 brew "zsh"
 brew "starship"
 brew "sheldon"
+
+# ------------------------------------------------------------------------------
+# Navigation & Search
+# ------------------------------------------------------------------------------
 brew "zoxide"
 brew "fzf"
 brew "atuin"
 
 # ------------------------------------------------------------------------------
-# Modern Unix Tools
+# Modern Unix Replacements
 # ------------------------------------------------------------------------------
 brew "bat"
 brew "eza"
 brew "fd"
 brew "ripgrep"
-brew "jq"
-brew "yq"
-brew "git-delta"
-brew "dust"
-brew "procs"
 brew "sd"
-brew "tldr"
+brew "dust"
 brew "duf"
-brew "ncdu"
-brew "htop"
-brew "bmon"
+brew "procs"
 brew "btop"
-brew "lazydocker"
 
 # ------------------------------------------------------------------------------
-# Core Development
+# Text Processing & Data Tools
+# ------------------------------------------------------------------------------
+brew "jq"
+brew "yq"
+brew "miller"
+brew "gron"
+brew "tldr"
+
+# ------------------------------------------------------------------------------
+# Compression & Archives
+# ------------------------------------------------------------------------------
+brew "zstd"
+brew "ouch"
+
+# ------------------------------------------------------------------------------
+# Version Control
 # ------------------------------------------------------------------------------
 brew "git"
 brew "gh"
 brew "lazygit"
+brew "git-delta"
+
+# ------------------------------------------------------------------------------
+# Editor & Terminal Multiplexer
+# ------------------------------------------------------------------------------
 brew "neovim"
 brew "tmux"
-brew "zellij"
 
 # ------------------------------------------------------------------------------
 # Development Workflow
 # ------------------------------------------------------------------------------
+brew "direnv"
 brew "just"
 brew "lefthook"
+brew "entr"
 
 # ------------------------------------------------------------------------------
-# Networking Essentials
+# Network Essentials
 # ------------------------------------------------------------------------------
 brew "curl"
 brew "wget"

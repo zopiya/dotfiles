@@ -1,73 +1,106 @@
 # ==============================================================================
-# macOS Brewfile - Workstation Profile
+# Brewfile.macos - macOS Workstation Profile
 # ==============================================================================
-# Full development environment with GUI apps, security tools, and fonts.
+# Full-featured development environment for macOS with GUI applications,
+# security tools, enhanced CLI utilities, and complete Kubernetes ecosystem.
+#
+# This file contains INCREMENTAL packages beyond Brewfile.core.
+# All core utilities (git, neovim, fzf, etc.) are inherited from core.
+#
+# Design Principle: AI-Native Modern Development Stack
+# Focus on:
+#   1. Cloud-native development (K8s, containers, IaC)
+#   2. AI-assisted workflows (aider, copilot-ready)
+#   3. Security-first approach (hardware keys, encryption)
+#   4. Modern GUI applications (native macOS experience)
+#
+# Profile: workstation (macOS)
+# Dependencies: Brewfile.core
 # ==============================================================================
 
 tap "homebrew/cask-fonts"
 tap "1password/tap"
 
 # ------------------------------------------------------------------------------
-# Shell Essentials
+# Enhanced Shell & CLI
 # ------------------------------------------------------------------------------
-brew "zsh"
-brew "starship"
-brew "sheldon"
-brew "zoxide"
-brew "fzf"
-brew "atuin"
 brew "fastfetch"
-
-# ------------------------------------------------------------------------------
-# Modern Unix Tools
-# ------------------------------------------------------------------------------
-brew "bat"
-brew "eza"
-brew "fd"
-brew "ripgrep"
-brew "jq"
-brew "yq"
-brew "git-delta"
-brew "dust"
+brew "zellij"
 brew "bottom"
-brew "procs"
-brew "sd"
 brew "choose"
-brew "tldr"
 
 # ------------------------------------------------------------------------------
-# Development & Productivity
+# File Management & Previews
 # ------------------------------------------------------------------------------
-brew "git"
-brew "gh"
-brew "lazygit"
-brew "neovim"
-brew "tmux"
 brew "yazi"
-brew "just"
 brew "watchexec"
-brew "aider"
 
 # ------------------------------------------------------------------------------
-# Network & Transfer
+# AI-Assisted Development
 # ------------------------------------------------------------------------------
-brew "curl"
-brew "wget"
+brew "aider"
+brew "glow"
+brew "vhs"
+
+# ------------------------------------------------------------------------------
+# Container & Kubernetes Ecosystem
+# ------------------------------------------------------------------------------
+brew "lazydocker"
+brew "dive"
+brew "k9s"
+brew "helm"
+brew "kubectx"
+brew "stern"
+brew "kustomize"
+
+# ------------------------------------------------------------------------------
+# Infrastructure as Code & DevOps
+# ------------------------------------------------------------------------------
+brew "terraform"
+brew "ansible"
+brew "trivy"
+brew "grype"
+brew "syft"
+
+# ------------------------------------------------------------------------------
+# Network & API Tools
+# ------------------------------------------------------------------------------
 brew "httpie"
 brew "xh"
 brew "doggo"
 brew "gping"
 brew "trippy"
+brew "grpcurl"
+brew "evans"
 
 # ------------------------------------------------------------------------------
-# Runtime & Package Management
+# Database Tools
+# ------------------------------------------------------------------------------
+brew "usql"
+brew "pgcli"
+
+# ------------------------------------------------------------------------------
+# Runtime & Package Managers
 # ------------------------------------------------------------------------------
 brew "mise"
 brew "uv"
 brew "pnpm"
 
 # ------------------------------------------------------------------------------
-# Security & Identity
+# Performance & Code Analysis
+# ------------------------------------------------------------------------------
+brew "hyperfine"
+brew "tokei"
+brew "bandwhich"
+
+# ------------------------------------------------------------------------------
+# Git Enhancements
+# ------------------------------------------------------------------------------
+brew "git-cliff"
+brew "onefetch"
+
+# ------------------------------------------------------------------------------
+# Security & Encryption
 # ------------------------------------------------------------------------------
 brew "gnupg"
 brew "age"
@@ -77,54 +110,57 @@ brew "pinentry-mac"
 brew "gitleaks"
 
 # ------------------------------------------------------------------------------
-# System Maintenance
+# Backup & System Maintenance
 # ------------------------------------------------------------------------------
-brew "chezmoi"
-brew "topgrade"
 brew "restic"
 
 # ------------------------------------------------------------------------------
-# Fonts (Nerd Fonts)
+# Fonts - Nerd Fonts for Terminal
 # ------------------------------------------------------------------------------
 cask "font-jetbrains-mono-nerd-font"
 cask "font-hack-nerd-font"
 cask "font-noto-sans"
 cask "font-source-han-serif"
 
+# ==============================================================================
+# GUI Applications
+# ==============================================================================
+
 # ------------------------------------------------------------------------------
-# GUI Applications - Browsers
+# Browsers
 # ------------------------------------------------------------------------------
 cask "google-chrome"
 cask "firefox"
 
 # ------------------------------------------------------------------------------
-# GUI Applications - Terminals
+# Terminals - Modern GPU-Accelerated
 # ------------------------------------------------------------------------------
 cask "ghostty"
-cask "iterm2"
 cask "warp"
 
 # ------------------------------------------------------------------------------
-# GUI Applications - Communication & Sync
+# Communication & File Sync
 # ------------------------------------------------------------------------------
 cask "localsend"
 cask "nextcloud"
 
 # ------------------------------------------------------------------------------
-# GUI Applications - Development
+# Development Tools
 # ------------------------------------------------------------------------------
 cask "visual-studio-code"
-cask "jetbrains-toolbox"
-cask "electerm"
 cask "dbeaver-community"
 cask "bruno"
 
 # ------------------------------------------------------------------------------
-# GUI Applications - Productivity
+# Productivity & Knowledge Management
 # ------------------------------------------------------------------------------
 cask "1password"
 cask "obsidian"
 cask "typora"
-cask "keka"
+
+# ------------------------------------------------------------------------------
+# System Utilities
+# ------------------------------------------------------------------------------
 cask "stats"
+cask "keka"
 cask "vlc"
