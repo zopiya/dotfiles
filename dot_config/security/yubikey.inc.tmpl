@@ -1,8 +1,8 @@
-{{- /* YubiKey Integration - Workstation Only */ -}}
-{{- $profile := .profile | default "workstation" -}}
+{{- /* YubiKey Integration - macOS Only */ -}}
+{{- $profile := .profile | default "macos" -}}
 
 # YubiKey Integration (Profile: {{ $profile }})
-{{- if eq $profile "workstation" }}
+{{- if eq $profile "macos" }}
 if command -v ykman &> /dev/null; then
     # --- Aliases ---
     # Fast access to 2FA codes (Requires touch by default for OATH)

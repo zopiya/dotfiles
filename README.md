@@ -19,10 +19,10 @@ Opinionated dotfiles for macOS & Linux with multi-profile safety, YubiKey-ready 
 - [License](#license)
 
 ## Why Homeup
-- **Multi-profile**: Workstation, Codespace, and Server tracks keep trust boundaries clear.
-- **Cross-platform**: macOS plus Debian/Fedora/Arch/Alpine Linux with auto detection and sensible defaults.
+- **Multi-profile**: macOS, Mini, and Linux profiles keep trust boundaries clear and environments lean.
+- **Cross-platform**: macOS plus headless Linux (Debian/Fedora/Arch/Alpine) with auto detection.
 - **Secure-first**: No private keys in repo; profile-based secret isolation and credential TTLs baked in.
-- **YubiKey-ready**: GPG signing + SSH auth paths ready for hardware keys.
+- **YubiKey-ready**: GPG signing + SSH auth paths ready for hardware keys (macOS profile only).
 - **One-command bootstrap**: `curl | bash` installer sets up Homebrew, chezmoi, and profile packages.
 - **Reviewable setup**: Chezmoi templates and `just` tasks make it easy to diff before applying.
 
@@ -30,25 +30,27 @@ Opinionated dotfiles for macOS & Linux with multi-profile safety, YubiKey-ready 
 
 | Profile | Trust Model | Use On | Highlights |
 |---------|-------------|--------|------------|
-| **workstation** | Full | Personal laptop/desktop | GPG signing, YubiKey, GUI apps, full package set |
-| **codespace** | Borrowed | Dev containers / temporary hosts | SSH forwarding, CLI tools, no GPG |
-| **server** | Zero | Production / CI | Minimal packages, no private keys or GUI |
+| **macos** | Full | Personal macOS laptop/desktop | GPG signing, YubiKey, GUI apps, full toolset |
+| **mini** | Borrowed | Dev containers / temporary environments | Standalone minimal setup, CLI tools only, no GPG |
+| **linux** | Headless | Production servers / Linux workstations | Headless only (no GUI), SSH agent forwarding, no GPG |
+
+**Note**: Linux GUI support (Flatpak) has been removed in v2.0. All Linux environments are now headless.
 
 Set a profile via environment variable or installer flag:
 
 ```bash
-export HOMEUP_PROFILE=workstation     # environment override
-./bootstrap.sh -p server              # CLI flag
+export HOMEUP_PROFILE=macos      # environment override
+./bootstrap.sh -p linux          # CLI flag
 ```
 
 ## Quick Start
 
 ```bash
-# Interactive (auto-detects profile)
+# Interactive (auto-detects profile: macos on macOS, linux on Linux, mini in containers)
 curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | bash
 
 # Specify profile and auto-apply chezmoi
-curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | bash -s -- -p workstation -r zopiya/homeup -a
+curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | bash -s -- -p macos -r zopiya/homeup -a
 ```
 
 > Initialization is restricted to GitHub by default. To allow other sources, set `HOMEUP_ALLOW_UNTRUSTED_REPO=1`.
@@ -56,15 +58,15 @@ curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | b
 ## Bootstrap Commands
 
 - Interactive with auto-detect: `./bootstrap.sh`
-- Force profile: `./bootstrap.sh -p workstation`
-- Override repo + auto-apply: `./bootstrap.sh -p workstation -r zopiya/homeup -a`
-- Non-interactive/CI friendly: `./bootstrap.sh -p server -r zopiya/homeup -a -y`
-- Run from remote: `curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | bash -s -- -p codespace -r zopiya/homeup`
+- Force profile: `./bootstrap.sh -p macos`
+- Override repo + auto-apply: `./bootstrap.sh -p macos -r zopiya/homeup -a`
+- Non-interactive/CI friendly: `./bootstrap.sh -p linux -r zopiya/homeup -a -y`
+- Run from remote: `curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | bash -s -- -p mini -r zopiya/homeup`
 
 ## Installation
 
 - **Requirements**: `bash`, `curl`, `git` (bootstrap will install Homebrew + chezmoi automatically when missing).
-- **Non-interactive**: `./bootstrap.sh -p server -r zopiya/homeup -a -y` (suitable for CI/remote).
+- **Non-interactive**: `./bootstrap.sh -p linux -r zopiya/homeup -a -y` (suitable for CI/remote).
 - **Manual (chezmoi)**:
   ```bash
   # 1) Initialize
@@ -79,10 +81,10 @@ curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | b
 
 ## Security Defaults
 
-- SSH agent: workstation uses `ForwardAgent ask` (prompt per connection); codespace/server disable forwarding.
-- SSH CA: to trust an SSH CA, place the CA public key at `~/.ssh/ssh_ca.pub` on the target host (workstation clients can manage this manually).
-- Credential cache TTL: workstation 900s; codespace/server 60s.
-- Sensitive payloads: non-workstation profiles skip syncing `.gnupg/**` and `.config/security/*.inc`.
+- SSH agent: macos uses `ForwardAgent ask` (prompt per connection); mini/linux disable forwarding globally.
+- SSH CA: to trust an SSH CA, place the CA public key at `~/.ssh/ssh_ca.pub` on the target host (macOS clients can manage this manually).
+- Credential cache TTL: macOS 900s (keychain); mini/linux 60s (short-lived cache).
+- Sensitive payloads: non-macOS profiles skip syncing `.gnupg/**` and `.config/security/*.inc`.
 
 ## What's Inside
 
@@ -99,22 +101,20 @@ curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | b
 
 ```
 homeup/
-├── bootstrap.sh                 # Layer 0: Environment setup
-├── .chezmoiscripts/             # Layer 1: Package installation
+├── bootstrap.sh                 # Layer 0: Environment setup (supports: macos, mini, linux)
+├── .chezmoiscripts/             # Layer 1: Profile-aware package installation
 ├── packages/
-│   ├── Brewfile.core            # Shared CLI tools (all profiles)
-│   ├── Brewfile.macos           # macOS workstation
-│   ├── Brewfile.linux           # Linux workstation
-│   ├── Brewfile.codespace       # Codespace additions
-│   ├── Brewfile.server          # Server additions
-│   └── flatpak.txt              # Linux GUI apps
+│   ├── Brewfile.core            # Shared CLI tools (macos + linux profiles)
+│   ├── Brewfile.macos           # macOS-specific (GUI apps, macOS tools)
+│   ├── Brewfile.linux           # Headless Linux (server + workstation tools)
+│   └── Brewfile.mini            # Standalone minimal (dev containers)
 ├── dot_config/
-│   ├── git/                     # Git configuration
-│   ├── zsh/                     # Zsh configuration
+│   ├── git/                     # Git configuration (profile-aware GPG signing)
+│   ├── zsh/                     # Zsh configuration (consistent across all profiles)
 │   ├── nvim/                    # Neovim configuration
-│   └── security/                # GPG, 1Password, YubiKey
-├── private_dot_ssh/             # SSH configuration
-└── private_dot_gnupg/           # GPG configuration
+│   └── security/                # GPG, 1Password, YubiKey (macOS only)
+├── private_dot_ssh/             # SSH configuration (profile-aware agent forwarding)
+└── private_dot_gnupg/           # GPG configuration (macOS only; minimal for others)
 ```
 
 ## Customize

@@ -85,14 +85,14 @@ validate:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Validating templates for all profiles..."
-    for profile in workstation codespace server; do
+    for profile in macos mini linux; do
         echo "--- Profile: $profile ---"
         export HOMEUP_PROFILE=$profile
         chezmoi init --source . --destination /tmp/chezmoi-test-$profile --dry-run 2>/dev/null && echo "OK" || echo "FAIL"
     done
 
 # Test specific profile
-test profile="workstation":
+test profile="macos":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Testing profile: {{profile}}"
@@ -101,7 +101,7 @@ test profile="workstation":
     echo "Profile {{profile}} is valid"
 
 # Run bootstrap in dry-run mode
-bootstrap-dry profile="workstation":
+bootstrap-dry profile="macos":
     @echo "Dry-run bootstrap for profile: {{profile}}"
     HOMEUP_PROFILE={{profile}} ./bootstrap.sh -p {{profile}} -y --help || true
 
@@ -111,19 +111,19 @@ bootstrap-dry profile="workstation":
 
 # Show current profile
 profile:
-    @echo "Current profile: ${HOMEUP_PROFILE:-workstation}"
+    @echo "Current profile: ${HOMEUP_PROFILE:-macos}"
 
-# Set profile to workstation
-profile-workstation:
-    @echo "export HOMEUP_PROFILE=workstation"
+# Set profile to macos
+profile-macos:
+    @echo "export HOMEUP_PROFILE=macos"
 
-# Set profile to codespace
-profile-codespace:
-    @echo "export HOMEUP_PROFILE=codespace"
+# Set profile to mini
+profile-mini:
+    @echo "export HOMEUP_PROFILE=mini"
 
-# Set profile to server
-profile-server:
-    @echo "export HOMEUP_PROFILE=server"
+# Set profile to linux
+profile-linux:
+    @echo "export HOMEUP_PROFILE=linux"
 
 # ------------------------------------------------------------------------------
 # Packages
@@ -132,16 +132,14 @@ profile-server:
 # Install packages for current profile
 install-packages:
     @echo "Installing packages..."
-    brew bundle --file=packages/Brewfile.core
-    @if [ "$(uname)" = "Darwin" ]; then \
+    @if [ "${HOMEUP_PROFILE:-macos}" = "mini" ]; then \
+        brew bundle --file=packages/Brewfile.mini; \
+    elif [ "$(uname)" = "Darwin" ]; then \
+        brew bundle --file=packages/Brewfile.core; \
         brew bundle --file=packages/Brewfile.macos; \
     else \
+        brew bundle --file=packages/Brewfile.core; \
         brew bundle --file=packages/Brewfile.linux; \
-    fi
-    @if [ "$HOMEUP_PROFILE" = "codespace" ]; then \
-        brew bundle --file=packages/Brewfile.codespace; \
-    elif [ "$HOMEUP_PROFILE" = "server" ]; then \
-        brew bundle --file=packages/Brewfile.server; \
     fi
 
 # List all brew packages

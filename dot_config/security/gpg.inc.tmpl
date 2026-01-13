@@ -1,10 +1,10 @@
 {{- /* GPG Shell Integration - Profile-Aware */ -}}
-{{- $profile := .profile | default "workstation" -}}
-{{- $isWorkstation := eq $profile "workstation" -}}
+{{- $profile := .profile | default "macos" -}}
+{{- $isMacos := eq $profile "macos" -}}
 
 # GPG Configuration (Profile: {{ $profile }})
-{{- if $isWorkstation }}
-# Workstation: Full GPG agent integration with YubiKey support
+{{- if $isMacos }}
+# macOS: Full GPG agent integration with YubiKey support
 export GPG_TTY=$(tty)
 
 # Use GPG agent for SSH authentication (if using GPG-based SSH keys)

@@ -4,13 +4,11 @@
 # Tests bootstrap.sh and chezmoi configuration across all profiles.
 #
 # Matrix:
-#   - macOS + workstation
-#   - Debian + workstation
-#   - Debian + codespace
-#   - Debian + server
-#   - Fedora + workstation
-#   - Fedora + codespace
-#   - Fedora + server
+#   - macOS + macos (full setup with GPG signing)
+#   - Debian + mini (dev containers, minimal)
+#   - Debian + linux (headless server/workstation)
+#   - Fedora + mini (dev containers, minimal)
+#   - Fedora + linux (headless server/workstation)
 # ==============================================================================
 
 name: Test
@@ -31,9 +29,9 @@ on:
         type: choice
         options:
           - ""
-          - workstation
-          - codespace
-          - server
+          - macos
+          - mini
+          - linux
 
 # Limit concurrent runs per branch
 concurrency:
@@ -48,12 +46,12 @@ env:
 
 jobs:
   # ----------------------------------------------------------------------------
-  # macOS Workstation
+  # macOS Profile
   # ----------------------------------------------------------------------------
   test-macos:
-    name: macOS / workstation
+    name: macOS / macos
     runs-on: macos-latest
-    if: ${{ !github.event.inputs.profile || github.event.inputs.profile == 'workstation' }}
+    if: ${{ !github.event.inputs.profile || github.event.inputs.profile == 'macos' }}
     timeout-minutes: 45
 
     steps:
@@ -83,9 +81,9 @@ jobs:
         if: steps.checkout.outcome == 'success'
         run: |
           chmod +x bootstrap.sh
-          ./bootstrap.sh -p workstation -y
+          ./bootstrap.sh -p macos -y
         env:
-          HOMEUP_PROFILE: workstation
+          HOMEUP_PROFILE: macos
 
       - name: Verify Bootstrap
         id: verify_bootstrap
@@ -104,16 +102,16 @@ jobs:
           source "$HOME/.config/homebrew/shellenv"
           chezmoi init --apply --source .
         env:
-          HOMEUP_PROFILE: workstation
+          HOMEUP_PROFILE: macos
 
-      - name: Verify Workstation Profile
+      - name: Verify macOS Profile
         id: verify_profile
         if: steps.apply_chezmoi.outcome == 'success'
         run: |
           source "$HOME/.config/homebrew/shellenv"
           export PATH="$HOME/.local/bin:$PATH"
 
-          echo "=== Verifying Workstation Profile ==="
+          echo "=== Verifying macOS Profile ==="
 
           # Config files
           echo "--- Config Files ---"
@@ -131,15 +129,15 @@ jobs:
           command -v fzf || { echo "FAIL: fzf"; exit 1; }
           echo "OK: All core tools installed"
 
-          # Workstation-specific: GPG signing enabled
-          echo "--- Workstation Features ---"
+          # macOS-specific: GPG signing enabled
+          echo "--- macOS Features ---"
           grep -q "gpgsign = true" "$HOME/.config/git/config" || { echo "FAIL: GPG signing not enabled"; exit 1; }
           echo "OK: GPG signing enabled"
 
-          echo "=== Workstation Profile Verified ==="
+          echo "=== macOS Profile Verified ==="
 
   # ----------------------------------------------------------------------------
-  # Debian Matrix (workstation, codespace, server)
+  # Debian Matrix (mini, linux)
   # ----------------------------------------------------------------------------
   test-debian:
     name: Debian / ${{ matrix.profile }}
@@ -152,7 +150,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [workstation, codespace, server]
+        profile: [mini, linux]
 
     steps:
       - name: Install Dependencies
@@ -260,41 +258,13 @@ jobs:
             echo "OK: Core tools installed"
           '
 
-      - name: Verify Profile - Workstation
-        if: ${{ matrix.profile == 'workstation' && steps.verify_core.outcome == 'success' }}
+      - name: Verify Profile - Mini
+        if: ${{ matrix.profile == 'mini' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-            echo "=== Verifying Workstation Profile ==="
-
-            # GPG signing enabled
-            echo "--- GPG Signing ---"
-            test -f "$HOME/.config/git/config" || { echo "FAIL: git config missing"; exit 1; }
-            grep -q "gpgsign = true" "$HOME/.config/git/config" || { echo "FAIL: GPG signing not enabled"; exit 1; }
-            echo "OK: GPG signing enabled"
-
-            # Security configs present
-            echo "--- Security Configs ---"
-            test -f "$HOME/.gnupg/gpg.conf" || { echo "FAIL: gpg.conf"; exit 1; }
-            test -f "$HOME/.gnupg/gpg-agent.conf" || { echo "FAIL: gpg-agent.conf"; exit 1; }
-            echo "OK: Security configs present"
-
-            # SSH config with ForwardAgent yes
-            echo "--- SSH Config ---"
-            grep -q "ForwardAgent yes" "$HOME/.ssh/config" || { echo "FAIL: ForwardAgent not enabled"; exit 1; }
-            echo "OK: SSH ForwardAgent enabled"
-
-            echo "=== Workstation Profile Verified ==="
-          '
-
-      - name: Verify Profile - Codespace
-        if: ${{ matrix.profile == 'codespace' && steps.verify_core.outcome == 'success' }}
-        run: |
-          sudo -u testuser bash -c '
-            source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-            echo "=== Verifying Codespace Profile ==="
+            echo "=== Verifying Mini Profile ==="
 
             # GPG signing disabled
             echo "--- GPG Signing ---"
@@ -307,16 +277,16 @@ jobs:
             grep -q "ForwardAgent no" "$HOME/.ssh/config" || { echo "FAIL: ForwardAgent should be disabled"; exit 1; }
             echo "OK: SSH ForwardAgent disabled"
 
-            echo "=== Codespace Profile Verified ==="
+            echo "=== Mini Profile Verified ==="
           '
 
-      - name: Verify Profile - Server
-        if: ${{ matrix.profile == 'server' && steps.verify_core.outcome == 'success' }}
+      - name: Verify Profile - Linux
+        if: ${{ matrix.profile == 'linux' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-            echo "=== Verifying Server Profile ==="
+            echo "=== Verifying Linux Profile ==="
 
             # GPG signing disabled
             echo "--- GPG Signing ---"
@@ -335,11 +305,11 @@ jobs:
             test ! -f "$HOME/.config/security/yubikey.inc" || { echo "FAIL: yubikey.inc should not exist"; exit 1; }
             echo "OK: Security configs properly excluded"
 
-            echo "=== Server Profile Verified ==="
+            echo "=== Linux Profile Verified ==="
           '
 
   # ----------------------------------------------------------------------------
-  # Fedora Matrix (workstation, codespace, server)
+  # Fedora Matrix (mini, linux)
   # ----------------------------------------------------------------------------
   test-fedora:
     name: Fedora / ${{ matrix.profile }}
@@ -352,7 +322,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [workstation, codespace, server]
+        profile: [mini, linux]
 
     steps:
       - name: Install Dependencies
@@ -460,41 +430,13 @@ jobs:
             echo "OK: Core tools installed"
           '
 
-      - name: Verify Profile - Workstation
-        if: ${{ matrix.profile == 'workstation' && (!github.event.inputs.profile || github.event.inputs.profile == matrix.profile) }}
+      - name: Verify Profile - Mini
+        if: ${{ matrix.profile == 'mini' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-            echo "=== Verifying Workstation Profile ==="
-
-            # GPG signing enabled
-            echo "--- GPG Signing ---"
-            test -f "$HOME/.config/git/config" || { echo "FAIL: git config missing"; exit 1; }
-            grep -q "gpgsign = true" "$HOME/.config/git/config" || { echo "FAIL: GPG signing not enabled"; exit 1; }
-            echo "OK: GPG signing enabled"
-
-            # Security configs present
-            echo "--- Security Configs ---"
-            test -f "$HOME/.gnupg/gpg.conf" || { echo "FAIL: gpg.conf"; exit 1; }
-            test -f "$HOME/.gnupg/gpg-agent.conf" || { echo "FAIL: gpg-agent.conf"; exit 1; }
-            echo "OK: Security configs present"
-
-            # SSH config with ForwardAgent yes
-            echo "--- SSH Config ---"
-            grep -q "ForwardAgent yes" "$HOME/.ssh/config" || { echo "FAIL: ForwardAgent not enabled"; exit 1; }
-            echo "OK: SSH ForwardAgent enabled"
-
-            echo "=== Workstation Profile Verified ==="
-          '
-
-      - name: Verify Profile - Codespace
-        if: ${{ matrix.profile == 'codespace' && steps.verify_core.outcome == 'success' }}
-        run: |
-          sudo -u testuser bash -c '
-            source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-            echo "=== Verifying Codespace Profile ==="
+            echo "=== Verifying Mini Profile ==="
 
             # GPG signing disabled
             echo "--- GPG Signing ---"
@@ -507,16 +449,16 @@ jobs:
             grep -q "ForwardAgent no" "$HOME/.ssh/config" || { echo "FAIL: ForwardAgent should be disabled"; exit 1; }
             echo "OK: SSH ForwardAgent disabled"
 
-            echo "=== Codespace Profile Verified ==="
+            echo "=== Mini Profile Verified ==="
           '
 
-      - name: Verify Profile - Server
-        if: ${{ matrix.profile == 'server' && steps.verify_core.outcome == 'success' }}
+      - name: Verify Profile - Linux
+        if: ${{ matrix.profile == 'linux' && steps.verify_core.outcome == 'success' }}
         run: |
           sudo -u testuser bash -c '
             source "$HOME/.config/homebrew/shellenv" 2>/dev/null || eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-            echo "=== Verifying Server Profile ==="
+            echo "=== Verifying Linux Profile ==="
 
             # GPG signing disabled
             echo "--- GPG Signing ---"
@@ -535,7 +477,7 @@ jobs:
             test ! -f "$HOME/.config/security/yubikey.inc" || { echo "FAIL: yubikey.inc should not exist"; exit 1; }
             echo "OK: Security configs properly excluded"
 
-            echo "=== Server Profile Verified ==="
+            echo "=== Linux Profile Verified ==="
           '
 
   # ----------------------------------------------------------------------------
@@ -559,7 +501,7 @@ jobs:
           echo "=== Validating Chezmoi Templates ==="
 
           # Test each profile
-          for profile in workstation codespace server; do
+          for profile in macos mini linux; do
             echo "--- Testing profile: $profile ---"
             export HOMEUP_PROFILE=$profile
 

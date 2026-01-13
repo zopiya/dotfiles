@@ -11,7 +11,7 @@
 #   ./bootstrap.sh [OPTIONS]
 #
 # Options:
-#   -p, --profile <name>    Profile: workstation, codespace, server
+#   -p, --profile <name>    Profile: macos, mini, linux
 #   -r, --repo <repo>       Dotfiles repo (user/repo or full URL)
 #   -a, --apply             Auto-apply chezmoi after init
 #   -y, --yes               Non-interactive mode
@@ -19,9 +19,9 @@
 #   -v, --version           Show version
 #
 # Profiles:
-#   workstation - Full trust: YubiKey/GPG, GUI apps, all packages
-#   codespace   - Borrowed trust: SSH forwarding, CLI only, no GPG
-#   server      - Zero trust: minimal packages, no private keys
+#   macos - Full trust: YubiKey/GPG, GUI apps, all packages
+#   mini   - Borrowed trust: SSH forwarding, CLI only, no GPG
+#   linux      - Zero trust: minimal packages, no private keys
 #
 # ==============================================================================
 
@@ -74,7 +74,7 @@ Homeup Bootstrap - Multi-Profile Dotfiles Setup
 Usage: ./bootstrap.sh [OPTIONS]
 
 Options:
-  -p, --profile <name>    Profile: workstation, codespace, server
+  -p, --profile <name>    Profile: macos, mini, linux
                           Default: auto-detect with interactive confirmation
   -r, --repo <repo>       Dotfiles repo for chezmoi init
                           Formats: user/repo, github.com/user/repo, full URL
@@ -84,25 +84,25 @@ Options:
   -v, --version           Show version
 
 Profiles:
-  workstation   Full trust: YubiKey/GPG, GUI apps, all packages
-  codespace     Borrowed trust: SSH forwarding, CLI only, no GPG
-  server        Zero trust: minimal packages, no private keys
+  macos   Full trust: YubiKey/GPG, GUI apps, all packages
+  mini     Borrowed trust: SSH forwarding, CLI only, no GPG
+  linux        Zero trust: minimal packages, no private keys
 
 Examples:
   # Interactive (auto-detect profile)
   ./bootstrap.sh
 
   # Specify profile
-  ./bootstrap.sh -p workstation
+  ./bootstrap.sh -p macos
 
   # New machine one-liner (full automation)
-  ./bootstrap.sh -p workstation -r zopiya/homeup -a
+  ./bootstrap.sh -p macos -r zopiya/homeup -a
 
   # CI/Server automation (non-interactive)
-  ./bootstrap.sh -p server -r zopiya/homeup -a -y
+  ./bootstrap.sh -p linux -r zopiya/homeup -a -y
 
   # Remote execution
-  curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | bash -s -- -p workstation -r zopiya/homeup -a
+  curl -fsSL https://raw.githubusercontent.com/zopiya/homeup/main/bootstrap.sh | bash -s -- -p macos -r zopiya/homeup -a
 
 EOF
 }
@@ -167,10 +167,10 @@ parse_args() {
     # Validate profile if provided
     if [[ -n "$ARG_PROFILE" ]]; then
         case "$ARG_PROFILE" in
-            workstation|codespace|server) ;;
+            macos|linux|mini) ;;
             *)
                 printf "%s[ERROR]%s Invalid profile: %s\n" "$C_RED" "$C_RESET" "$ARG_PROFILE" >&2
-                printf "Valid profiles: workstation, codespace, server\n" >&2
+                printf "Valid profiles: macos, linux, mini\n" >&2
                 exit 1
                 ;;
         esac
@@ -425,29 +425,35 @@ detect_distro() {
 # ------------------------------------------------------------------------------
 
 auto_detect_profile() {
-    # Codespace / DevContainer detection
+    # Codespace / DevContainer detection -> mini profile
     if [[ -n "${CODESPACES:-}" ]] || [[ -n "${REMOTE_CONTAINERS:-}" ]] || [[ -n "${VSCODE_REMOTE_CONTAINERS_SESSION:-}" ]]; then
-        echo "codespace"
+        echo "mini"
         return 0
     fi
 
-    # GitHub Actions / CI detection -> treat as server
+    # GitHub Actions / CI detection -> linux profile
     if [[ -n "${CI:-}" ]] || [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-        echo "server"
+        echo "linux"
         return 0
     fi
 
-    # SSH session without display -> likely server
+    # SSH session without display -> linux profile
     if [[ -n "${SSH_CONNECTION:-}" ]] && [[ -z "${DISPLAY:-}" ]] && [[ -z "${WAYLAND_DISPLAY:-}" ]]; then
-        echo "server"
+        echo "linux"
         return 0
     fi
 
-    # Linux headless detection
+    # macOS always → macos profile
+    if [[ "$_OS" == "darwin" ]]; then
+        echo "macos"
+        return 0
+    fi
+
+    # Linux detection (GUI support removed in v2.0, all Linux is headless)
     if [[ "$_OS" == "linux" ]]; then
         local has_gui=false
 
-        # Check for display server
+        # Check for display linux
         if [[ -n "${DISPLAY:-}" ]] || [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
             has_gui=true
         fi
@@ -462,20 +468,20 @@ auto_detect_profile() {
             has_gui=true
         fi
 
-        if [[ "$has_gui" != true ]]; then
-            echo "server"
-            return 0
-        fi
+        # All Linux → linux profile (headless)
+        # Note: GUI support removed in v2.0
+        echo "linux"
+        return 0
     fi
 
-    # Default: workstation (macOS always, Linux with GUI)
-    echo "workstation"
+    # Fallback default
+    echo "macos"
 }
 
 validate_profile() {
     local profile="$1"
     case "$profile" in
-        workstation|codespace|server)
+        macos|linux|mini)
             return 0
             ;;
         *)
@@ -506,7 +512,7 @@ detect_profile() {
             return 0
         else
             msg_fail "Invalid HOMEUP_PROFILE value: $HOMEUP_PROFILE"
-            msg_info "Valid profiles: workstation, codespace, server"
+            msg_info "Valid profiles: macos, mini, linux"
             # Fall through to auto-detection
         fi
     fi
@@ -520,7 +526,7 @@ detect_profile() {
         printf "\n"
         printf "%sDetected profile:%s %s\n" "$C_CYAN" "$C_RESET" "$detected_profile"
         printf "Press Enter to confirm, or type "
-        printf "%sworkstation%s / %scodespace%s / %sserver%s to override\n" \
+        printf "%smacos%s / %smini%s / %slinux%s to override\n" \
             "$C_GREEN" "$C_RESET" "$C_CYAN" "$C_RESET" "$C_GRAY" "$C_RESET"
         printf "[%ds timeout] > " "$PROFILE_CONFIRM_TIMEOUT"
 
@@ -647,61 +653,14 @@ install_linux_deps() {
 }
 
 # ------------------------------------------------------------------------------
-# Flatpak (Linux workstation only)
+# Flatpak Installation Removed
 # ------------------------------------------------------------------------------
-
-install_flatpak() {
-    # Only install on Linux workstation profile
-    if [[ "$_OS" != "linux" ]] || [[ "$_PROFILE" != "workstation" ]]; then
-        return 0
-    fi
-
-    if command -v flatpak &>/dev/null; then
-        local version
-        version=$(flatpak --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
-        msg_skip "Flatpak v$version (already installed)"
-        return 0
-    fi
-
-    local install_cmd=""
-
-    case "$_DISTRO" in
-        debian)
-            install_cmd="sudo apt-get install -y -qq flatpak"
-            ;;
-        fedora)
-            # Fedora usually has flatpak pre-installed, but just in case
-            install_cmd="sudo dnf install -y -q flatpak"
-            ;;
-        arch)
-            install_cmd="sudo pacman -S --noconfirm --needed flatpak"
-            ;;
-        alpine)
-            install_cmd="sudo apk add --no-cache -q flatpak"
-            ;;
-        *)
-            msg_skip "Flatpak (unsupported distro: $_DISTRO)"
-            return 0
-            ;;
-    esac
-
-    (
-        $install_cmd >/dev/null 2>&1
-        # Add Flathub repository
-        flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1 || true
-    ) &
-
-    if spinner $! "Installing Flatpak"; then
-        if command -v flatpak &>/dev/null; then
-            msg_ok "Flatpak installed (Flathub added)"
-            return 0
-        fi
-    fi
-
-    # Flatpak failure is not fatal, just warn
-    msg_fail "Flatpak installation failed (non-fatal, continuing)"
-    return 0
-}
+# NOTE: Flatpak support has been removed in v2.0.
+# Linux profile is now headless-only and does not support GUI applications.
+# Former Linux Desktop users should either:
+#   1. Switch to macOS profile, or
+#   2. Manually install GUI apps outside of Homeup
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # Homebrew
@@ -885,7 +844,6 @@ main() {
         check_xcode_tools
     elif [[ "$_OS" == "linux" ]]; then
         install_linux_deps
-        install_flatpak
     fi
 
     install_brew

@@ -1,19 +1,20 @@
 {{- /* ==============================================================================
 SSH Authorized Keys - Profile Aware
 ============================================================================== */ -}}
-{{- $profile := .profile | default "workstation" -}}
-{{- $isServer := eq $profile "server" -}}
-{{- $isLinux := eq .chezmoi.os "linux" -}}
+{{- $profile := .profile | default "macos" -}}
+{{- $isLinuxProfile := eq $profile "linux" -}}
+{{- $isLinuxOS := eq .chezmoi.os "linux" -}}
 
 {{- /*
 Logic:
-1. Linux machines (Workstations or Servers) always act as SSH hosts -> Need CA Public Key.
-2. Explicit 'server' profile (even if non-Linux) -> Need CA Public Key.
-3. macOS Workstations -> Client only, no authorized_keys needed.
+1. Linux OS machines (any profile) always act as SSH hosts -> Need CA Public Key.
+2. Explicit 'linux' profile (even if non-Linux OS) -> Need CA Public Key.
+3. macOS profile -> Client only, no authorized_keys needed.
+4. Mini profile on Linux -> Needs CA Public Key (dev containers accept SSH from host).
 */ -}}
 
-{{- if or $isLinux $isServer }}
-# === {{ if $isServer }}SERVER{{ else }}LINUX{{ end }} HOST: CA TRUST ===
+{{- if or $isLinuxOS $isLinuxProfile }}
+# === {{ if $isLinuxProfile }}LINUX PROFILE{{ else }}LINUX OS{{ end }}: CA TRUST ===
 # Trust the User CA. Any SSH key signed by this CA is allowed to log in.
 # Replace the placeholder below with your actual User CA Public Key (e.g., contents of user_ca.pub).
 # Format: cert-authority <algorithm> <key-content> [comment]

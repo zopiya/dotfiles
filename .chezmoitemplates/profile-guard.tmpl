@@ -5,35 +5,36 @@
     {{- template "profile-guard" . -}}
 
   After including, these variables are available:
-    - $profile:      Current profile ("workstation", "codespace", or "server")
-    - $isWorkstation: true if profile == "workstation"
-    - $isCodespace:   true if profile == "codespace"
-    - $isServer:      true if profile == "server"
-    - $hasGUI:        true if GUI apps are expected (workstation only)
-    - $hasGPG:        true if GPG signing is enabled (workstation only)
-    - $hasPrivateKey: true if private keys are available (workstation only)
+    - $profile:  Current profile ("macos", "linux", or "mini")
+    - $isMacos:  true if profile == "macos"
+    - $isLinux:  true if profile == "linux"
+    - $isMini:   true if profile == "mini"
+    - $hasGUI:        true if GUI apps are expected (macos only)
+    - $hasGPG:        true if GPG signing is enabled (macos only)
+    - $hasPrivateKey: true if private keys are available (macos only)
+    - $hasAgentForward: true if SSH agent forwarding is used (macos and linux)
 
   Example:
     {{- template "profile-guard" . -}}
-    {{- if $isWorkstation }}
-    # Workstation-specific configuration
+    {{- if $isMacos }}
+    # macOS-specific configuration
     {{- end }}
 */ -}}
 
 {{- /* Validate and normalize profile */ -}}
-{{- $profile := .profile | default "workstation" -}}
-{{- $validProfiles := list "workstation" "codespace" "server" -}}
+{{- $profile := .profile | default "macos" -}}
+{{- $validProfiles := list "macos" "linux" "mini" -}}
 {{- if not (has $profile $validProfiles) -}}
-{{-   $profile = "workstation" -}}
+{{-   $profile = "macos" -}}
 {{- end -}}
 
 {{- /* Derived boolean flags */ -}}
-{{- $isWorkstation := eq $profile "workstation" -}}
-{{- $isCodespace := eq $profile "codespace" -}}
-{{- $isServer := eq $profile "server" -}}
+{{- $isMacos := eq $profile "macos" -}}
+{{- $isLinux := eq $profile "linux" -}}
+{{- $isMini := eq $profile "mini" -}}
 
 {{- /* Capability flags based on profile */ -}}
-{{- $hasGUI := $isWorkstation -}}
-{{- $hasGPG := $isWorkstation -}}
-{{- $hasPrivateKey := $isWorkstation -}}
-{{- $hasAgentForward := or $isWorkstation $isCodespace -}}
+{{- $hasGUI := $isMacos -}}
+{{- $hasGPG := $isMacos -}}
+{{- $hasPrivateKey := $isMacos -}}
+{{- $hasAgentForward := or $isMacos $isLinux -}}

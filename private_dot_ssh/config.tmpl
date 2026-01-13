@@ -2,9 +2,9 @@
 SSH Configuration - Multi-Profile Support
 
 Profile Matrix:
-  - workstation: Trust anchor, local keys + CA cert, agent forwarding to remotes
-  - codespace:   Borrowed trust, agent forwarded FROM host, no local keys
-  - server:      Zero trust, no keys, no forwarding (CA auth handled server-side)
+  - macos: Trust anchor, local keys + CA cert, agent forwarding to remotes
+  - mini:  Borrowed trust, agent forwarded FROM host, no local keys
+  - linux: Zero trust, no keys, no forwarding (CA auth handled server-side)
 
 CA Certificate Strategy:
   - SSH auto-discovers *-cert.pub next to private key
@@ -12,10 +12,10 @@ CA Certificate Strategy:
   - Principals in cert control which users can be assumed
 
 ============================================================================== */ -}}
-{{- $profile := .profile | default "workstation" -}}
-{{- $isWorkstation := eq $profile "workstation" -}}
-{{- $isCodespace := eq $profile "codespace" -}}
-{{- $isServer := eq $profile "server" -}}
+{{- $profile := .profile | default "macos" -}}
+{{- $isMacos := eq $profile "macos" -}}
+{{- $isMini := eq $profile "mini" -}}
+{{- $isLinux := eq $profile "linux" -}}
 
 # ==============================================================================
 # SSH Configuration
@@ -34,15 +34,15 @@ Include ~/.ssh/config.local
 Host github.com
     User git
     ServerAliveInterval 30
-{{- if $isWorkstation }}
+{{- if $isMacos }}
     # Use standard key for public git (ignores CA cert automatically on GitHub side)
     IdentityFile ~/.ssh/MainZopiyaSSH
 {{- end }}
 
-{{- if $isWorkstation }}
+{{- if $isMacos }}
 
 # ------------------------------------------------------------------------------
-# 3. Host-Specific Overrides (Workstation only)
+# 3. Host-Specific Overrides (macOS only)
 # ------------------------------------------------------------------------------
 # Production servers: use deploy user
 # Host prod-* staging-*
@@ -60,8 +60,8 @@ Host github.com
 # 4. Global Defaults
 # ------------------------------------------------------------------------------
 Host *
-{{- if $isWorkstation }}
-    # === WORKSTATION PROFILE ===
+{{- if $isMacos }}
+    # === MACOS PROFILE ===
     # Trust anchor: local YubiKey + CA-signed certificate
 
     # Default user (most common login identity)
@@ -77,8 +77,8 @@ Host *
     ForwardAgent no
     AddKeysToAgent yes
 
-{{- else if $isCodespace }}
-    # === CODESPACE PROFILE ===
+{{- else if $isMini }}
+    # === MINI PROFILE ===
     # Borrowed trust: agent forwarded from host machine
 
     # Don't set default User - rely on command line or host-specific config
@@ -88,8 +88,8 @@ Host *
     # Do NOT forward further to avoid agent chain attacks
     ForwardAgent no
 
-{{- else if $isServer }}
-    # === SERVER PROFILE ===
+{{- else if $isLinux }}
+    # === LINUX PROFILE ===
     # Zero trust: no local keys, no agent forwarding
     # SSH client config is minimal; auth happens via CA on sshd side
 
@@ -105,7 +105,7 @@ Host *
     # --- Connection Multiplexing ---
     ControlMaster auto
     ControlPath ~/.ssh/sockets/ssh_mux_%C
-{{- if $isWorkstation }}
+{{- if $isMacos }}
     ControlPersist 4h
 {{- else }}
     ControlPersist 1h

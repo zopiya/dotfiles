@@ -2,12 +2,12 @@
 Git Configuration - Profile-Aware
 
 Profile Matrix:
-  - workstation: Full config with GPG signing
-  - codespace:   Full config, GPG signing DISABLED
-  - server:      Full config, GPG signing DISABLED
+  - macos: Full config with GPG signing
+  - mini:  Full config, GPG signing DISABLED
+  - linux: Full config, GPG signing DISABLED
 ============================================================================== */ -}}
-{{- $profile := .profile | default "workstation" -}}
-{{- $isWorkstation := eq $profile "workstation" -}}
+{{- $profile := .profile | default "macos" -}}
+{{- $isMacos := eq $profile "macos" -}}
 
 # ==============================================================================
 # Git Configuration
@@ -43,14 +43,14 @@ Profile Matrix:
 [credential]
 {{- if eq .chezmoi.os "darwin" }}
     helper = osxkeychain
-{{- else if $isWorkstation }}
-    # Workstation Linux: short-lived cache to reduce credential exposure
+{{- else if $isMacos }}
+    # macOS Linux: short-lived cache to reduce credential exposure
     helper = cache --timeout=900
-{{- else if eq $profile "codespace" }}
-    # Codespace: Minimal cache for borrowed environments
+{{- else if eq $profile "mini" }}
+    # Mini: Minimal cache for borrowed environments
     helper = cache --timeout=60
-{{- else if eq $profile "server" }}
-    # Server: Minimal cache for zero-trust hosts
+{{- else if eq $profile "linux" }}
+    # Linux: Minimal cache for zero-trust hosts
     helper = cache --timeout=60
 {{- else }}
     helper = cache --timeout=900
@@ -104,7 +104,7 @@ Profile Matrix:
 # Commit Signing
 # ------------------------------------------------------------------------------
 [commit]
-{{- if $isWorkstation }}
+{{- if $isMacos }}
     gpgsign = true
 {{- else }}
     # {{ $profile | title }}: GPG signing disabled
@@ -114,13 +114,13 @@ Profile Matrix:
     verbose = true
 
 [tag]
-{{- if $isWorkstation }}
+{{- if $isMacos }}
     gpgsign = true
 {{- else }}
     gpgsign = false
 {{- end }}
 
-{{- if $isWorkstation }}
+{{- if $isMacos }}
 
 [gpg]
     format = openpgp

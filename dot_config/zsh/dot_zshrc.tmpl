@@ -4,8 +4,8 @@ Zsh Configuration - Profile-Aware
 Shell experience is CONSISTENT across all profiles.
 Only security modules (GPG, 1Password, YubiKey) differ by profile.
 ============================================================================== */ -}}
-{{- $profile := .profile | default "workstation" -}}
-{{- $isWorkstation := eq $profile "workstation" -}}
+{{- $profile := .profile | default "macos" -}}
+{{- $isMacos := eq $profile "macos" -}}
 
 # ==============================================================================
 # Zsh Configuration (Profile: {{ $profile }})
@@ -66,8 +66,8 @@ fi
 [ -f "$ZDOTDIR/functions.zsh" ] && source "$ZDOTDIR/functions.zsh"
 
 # --- Security Modules (Profile-Dependent) ---
-{{- if $isWorkstation }}
-# [Workstation] Full security integration
+{{- if $isMacos }}
+# [macOS] Full security integration
 
 # GPG Agent
 [ -f "$XDG_CONFIG_HOME/security/gpg.inc" ] && source "$XDG_CONFIG_HOME/security/gpg.inc"

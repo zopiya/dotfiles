@@ -1,18 +1,18 @@
 {{- /* ==============================================================================
 GPG Agent Configuration - Profile-Aware
 
-Only workstation profile uses full GPG with YubiKey.
-Codespace/Server profiles get minimal config (file exists but no active agent).
+Only macos profile uses full GPG with YubiKey.
+Linux/Mini profiles get minimal config (file exists but no active agent).
 ============================================================================== */ -}}
-{{- $profile := .profile | default "workstation" -}}
-{{- $isWorkstation := eq $profile "workstation" -}}
+{{- $profile := .profile | default "macos" -}}
+{{- $isMacos := eq $profile "macos" -}}
 
 # ==============================================================================
 # GPG Agent Configuration
 # Profile: {{ $profile }}
 # ==============================================================================
 
-{{- if $isWorkstation }}
+{{- if $isMacos }}
 # --- Cache Settings ---
 # PIN is cached for 1 hour (3600s).
 # Signature verification still requires physical touch (UIF) on YubiKey.
@@ -46,7 +46,7 @@ pinentry-program /usr/bin/pinentry
 # [{{ $profile | upper }} PROFILE]
 # GPG signing disabled. This file exists for compatibility.
 # To enable GPG signing manually:
-#   1. Set profile to "workstation" in chezmoi config
+#   1. Set profile to "macos" in chezmoi config
 #   2. Or configure GPG manually for this environment
 
 # Minimal settings (no active agent expected)

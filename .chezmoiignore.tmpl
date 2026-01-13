@@ -1,6 +1,6 @@
 # ==============================================================================
 # Chezmoi Ignore Configuration
-# Profile: {{ .profile | default "workstation" }}
+# Profile: {{ .profile | default "macos" }}
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -40,12 +40,12 @@ lefthook.yml
 # Profile-Based Exclusions
 # ------------------------------------------------------------------------------
 
-{{- $profile := .profile | default "workstation" }}
+{{- $profile := .profile | default "macos" }}
 
-{{- if ne $profile "workstation" }}
-# Non-Workstation: Exclude GUI and Desktop configurations
+{{- if ne $profile "macos" }}
+# Non-macOS: Exclude GUI and Desktop configurations
 .config/vscode/
-# Non-Workstation: Block private key and GPG material
+# Non-macOS: Block private key and GPG material
 .ssh/id_*
 .ssh/id_*.*
 .gnupg/
@@ -54,13 +54,13 @@ lefthook.yml
 .config/security/*.inc
 {{- end }}
 
-{{- if eq $profile "server" }}
-# Server: Exclude security tools that require private keys
+{{- if eq $profile "linux" }}
+# Linux: Exclude security tools that require private keys
 .config/security/1password.inc
 .config/security/yubikey.inc
 {{- end }}
 
-{{- if eq $profile "codespace" }}
-# Codespace: Exclude items handled by devcontainer
+{{- if eq $profile "mini" }}
+# Mini: Exclude items handled by devcontainer
 # (Currently none - shell experience should be consistent)
 {{- end }}

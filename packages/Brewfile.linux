@@ -1,23 +1,24 @@
 # ==============================================================================
-# Brewfile.linux - Linux Workstation Profile
+# Brewfile.linux - Unified Linux Profile (Headless)
 # ==============================================================================
-# Full-featured development environment for Linux workstations with enhanced
-# CLI utilities, complete container/K8s ecosystem, and development tools.
+# Full-featured headless environment for remote Linux hosts, servers, and homelabs.
+# This profile merges former workstation(Linux) and server capabilities.
 #
 # This file contains INCREMENTAL packages beyond Brewfile.core.
 # All core utilities (git, neovim, fzf, etc.) are inherited from core.
-# GUI applications are managed via Flatpak (see flatpak.txt).
 #
-# Design Principle: AI-Native Modern Development Stack
+# Design Principle: Complete Dev + Ops Headless Stack
 # Focus on:
 #   1. Cloud-native development (K8s, containers, IaC)
 #   2. AI-assisted workflows (aider, copilot-ready)
 #   3. Security-first approach (hardware keys, encryption)
-#   4. CLI-first with Flatpak for GUI (native Linux experience)
+#   4. System monitoring and operations (glances, bmon, lnav)
+#   5. SSH-only access (no GUI support)
 #
-# Profile: workstation (Linux)
+# Profile: linux (headless)
 # Dependencies: Brewfile.core
-# GUI Apps: flatpak.txt
+# Total Packages: 50 (47 from workstation + 3 from server)
+# GUI Apps: None (removed in v2.0)
 # ==============================================================================
 
 tap "1password/tap"
@@ -29,6 +30,13 @@ brew "fastfetch"
 brew "zellij"
 brew "bottom"
 brew "choose"
+
+# ------------------------------------------------------------------------------
+# System Monitoring & Operations (Server Additions)
+# ------------------------------------------------------------------------------
+brew "glances"    # Advanced system monitor (from server profile)
+brew "bmon"       # Bandwidth monitor (from server profile)
+brew "lnav"       # Log file navigator (from server profile)
 
 # ------------------------------------------------------------------------------
 # File Management & Previews
