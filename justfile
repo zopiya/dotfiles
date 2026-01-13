@@ -1,7 +1,7 @@
 # ==============================================================================
 # Homeup Justfile - Task Orchestration for Dotfiles Management
 # ==============================================================================
-# Version: 2.0
+# Version: 2.1
 # Usage: just <task>
 # Quick help: just --list or just help
 # ==============================================================================
@@ -17,187 +17,149 @@ CHEZMOI_SOURCE := justfile_directory()
 PROFILE := env_var_or_default("HOMEUP_PROFILE", "macos")
 
 # ------------------------------------------------------------------------------
-# 📚 Help & Information
+# 📚 帮助与导航 (Help & Navigation)
 # ------------------------------------------------------------------------------
 
-# Show this help message (default task)
+# 显示交互式菜单 (默认任务)
 @default:
     just --choose
 
-# Show detailed help with examples
+# 显示分类帮助信息
 help:
-    @echo "━━━ Homeup Task Runner ━━━"
+    @echo "━━━ Homeup 任务运行器 ━━━"
     @echo ""
-    @echo "🎯 Quick Start:"
-    @echo "  just apply              # Apply dotfiles"
-    @echo "  just diff               # Show changes before applying"
-    @echo "  just install-packages   # Install Homebrew packages"
-    @echo "  just validate           # Validate all profiles"
+    @echo "🔥 常用高频 (Daily):"
+    @echo "  just apply              # 应用配置更改 (最常用)"
+    @echo "  just diff               # 查看待变更内容"
+    @echo "  just update             # 拉取远程代码并应用"
+    @echo "  just install-packages   # 安装/更新软件包"
     @echo ""
-    @echo "📦 Package Management:"
-    @echo "  just packages-verify    # Verify package availability"
-    @echo "  just packages-info      # Show package statistics"
-    @echo "  just packages-outdated  # Check for outdated packages"
+    @echo "🛠️ 维护诊断 (Maintenance):"
+    @echo "  just doctor             # 系统健康检查"
+    @echo "  just check              # 快速验证配置"
+    @echo "  just clean              # 清理缓存"
+    @echo "  just rescue             # 🚑 紧急修复助手"
     @echo ""
-    @echo "🔍 Diagnostics:"
-    @echo "  just doctor             # Run health checks"
-    @echo "  just info               # Show system information"
-    @echo "  just debug              # Debug chezmoi configuration"
+    @echo "🎭 Profile 管理:"
+    @echo "  just profile            # 显示当前 Profile"
+    @echo "  just profile-[type]     # 切换 Profile (macos/linux/mini)"
     @echo ""
-    @echo "🧪 Testing:"
-    @echo "  just ci                 # Run all CI checks"
-    @echo "  just test [profile]     # Test specific profile"
+    @echo "🧪 开发与测试:"
+    @echo "  just ci                 # 运行完整 CI 测试"
+    @echo "  just validate           # 验证模板语法"
     @echo ""
-    @echo "💡 Use 'just --list' to see all available tasks"
-    @echo "💡 Use 'just --choose' for interactive selection"
+    @echo "💡 提示: 使用 'just --list' 查看所有任务"
 
-# Show system information
-info:
-    @echo "━━━ System Information ━━━"
+# 快速导航菜单 (交互式)
+quick:
+    @echo "━━━ 快速导航 ━━━"
+    @echo "请选择要执行的操作:"
+    @echo "1) 应用配置 (apply)"
+    @echo "2) 查看差异 (diff)"
+    @echo "3) 更新系统 (update + upgrade)"
+    @echo "4) 健康检查 (doctor)"
+    @echo "5) 退出"
+    @read -p "请输入选项 [1-5]: " choice; \
+    case "$choice" in \
+        1) just apply ;; \
+        2) just diff ;; \
+        3) just update && just upgrade ;; \
+        4) just doctor ;; \
+        *) echo "已取消" ;; \
+    esac
+
+# 🚑 紧急修复助手
+rescue:
+    @echo "━━━ 🚑 救援模式 ━━━"
+    @echo "正在尝试自动修复常见问题..."
     @echo ""
-    @echo "OS: $(uname -s) $(uname -r)"
-    @echo "Architecture: $(uname -m)"
-    @echo "Profile: {{PROFILE}}"
-    @echo "Chezmoi version: $(chezmoi --version | head -1)"
-    @echo "Homebrew version: $(brew --version | head -1)"
-    @echo "Shell: $SHELL"
-    @echo "Git version: $(git --version)"
+    @echo "1. 清理 Chezmoi 缓存..."
+    @chezmoi purge --force || true
+    @echo "2. 重新初始化 Git钩子..."
+    @just install-hooks || true
+    @echo "3. 运行健康检查..."
+    @just doctor
     @echo ""
-    @echo "📂 Paths:"
-    @echo "  Source: {{CHEZMOI_SOURCE}}"
-    @echo "  Config: $HOME/.config/chezmoi"
-    @echo "  Data: $HOME/.local/share/chezmoi"
+    @echo "如果问题仍然存在，请尝试: just reinstall"
 
 # ------------------------------------------------------------------------------
-# 🏠 Chezmoi Operations
+# 🔥 核心日常操作 (Core Operations)
 # ------------------------------------------------------------------------------
 
-# Apply dotfiles configuration
+# 应用配置 (Apply dotfiles configuration)
 apply:
-    @echo "Applying dotfiles..."
+    @echo "正在应用配置..."
     chezmoi apply
 
-# Apply with verbose output
+# 应用配置 (显示详细日志)
 apply-verbose:
-    @echo "Applying dotfiles (verbose)..."
+    @echo "正在应用配置 (详细模式)..."
     chezmoi apply -v
 
-# Show diff before applying
+# 查看差异 (Show diff before applying)
 diff:
-    @echo "Showing differences..."
+    @echo "查看差异..."
     chezmoi diff
 
-# Interactive apply (review each change)
+# 交互式应用 (Interactive apply)
 apply-interactive:
-    @echo "Interactive apply..."
+    @echo "交互式应用..."
     chezmoi apply --interactive
 
-# Edit a managed file
-edit file:
-    chezmoi edit {{file}}
-
-# Update from remote repository and apply
+# 从远程仓库更新并应用 (Update from remote)
 update:
-    @echo "Updating from remote..."
+    @echo "从远程更新..."
     chezmoi update
 
-# Re-add a file to chezmoi
-add file:
-    @echo "Adding {{file}} to chezmoi..."
-    chezmoi add {{file}}
-
-# Show chezmoi status
+# 查看状态 (Show chezmoi status)
 status:
     chezmoi status
 
-# Verify chezmoi configuration
-verify:
-    chezmoi verify
+# 编辑受管文件 (Edit a managed file)
+edit file:
+    chezmoi edit {{file}}
 
-# Show chezmoi data
-data:
-    chezmoi data
-
-# Execute chezmoi scripts in dry-run mode
-execute-dry:
-    @echo "Dry-run executing scripts..."
-    chezmoi execute-template --init --promptBool=false < /dev/null || true
+# 添加文件到管理 (Add a file to chezmoi)
+add file:
+    @echo "添加 {{file}} 到 chezmoi..."
+    chezmoi add {{file}}
 
 # ------------------------------------------------------------------------------
-# 🎭 Profile Management
+# 📦 软件包管理 (Package Management)
 # ------------------------------------------------------------------------------
 
-# Show current profile
-profile:
-    @echo "Current profile: {{PROFILE}}"
-    @echo ""
-    @echo "Available profiles:"
-    @echo "  • macos - Full macOS workstation (GPG, YubiKey, GUI apps)"
-    @echo "  • linux - Headless Linux server (SSH-only, no GUI)"
-    @echo "  • mini  - Minimal ephemeral (containers, Codespaces)"
-    @echo ""
-    @echo "To change: export HOMEUP_PROFILE=<profile>"
-
-# Set profile to macos
-profile-macos:
-    @echo "export HOMEUP_PROFILE=macos"
-    @echo "Run: source ~/.zshrc or restart shell"
-
-# Set profile to linux
-profile-linux:
-    @echo "export HOMEUP_PROFILE=linux"
-    @echo "Run: source ~/.zshrc or restart shell"
-
-# Set profile to mini
-profile-mini:
-    @echo "export HOMEUP_PROFILE=mini"
-    @echo "Run: source ~/.zshrc or restart shell"
-
-# Show profile differences
-profile-diff from to:
-    @echo "Comparing profiles: {{from}} vs {{to}}"
-    @echo ""
-    @echo "=== Packages in {{from}} but not in {{to}} ==="
-    @comm -23 \
-        <(grep -E '^brew "' packages/Brewfile.{{from}} 2>/dev/null | sed 's/^brew "\([^"]*\)".*/\1/' | sort || true) \
-        <(grep -E '^brew "' packages/Brewfile.{{to}} 2>/dev/null | sed 's/^brew "\([^"]*\)".*/\1/' | sort || true) || true
-
-# ------------------------------------------------------------------------------
-# 📦 Package Management
-# ------------------------------------------------------------------------------
-
-# Install packages for current profile
+# 安装当前 Profile 的软件包
 install-packages:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "━━━ Installing packages for profile: {{PROFILE}} ━━━"
+    echo "━━━ 安装软件包 (Profile: {{PROFILE}}) ━━━"
     echo ""
 
     if [ "{{PROFILE}}" = "mini" ]; then
-        echo "📦 Installing Brewfile.mini (standalone)"
+        echo "📦 安装 Brewfile.mini (精简版)"
         brew bundle --file=packages/Brewfile.mini
     elif [ "$(uname)" = "Darwin" ]; then
-        echo "📦 Installing Brewfile.core"
+        echo "📦 安装 Brewfile.core"
         brew bundle --file=packages/Brewfile.core
         echo ""
-        echo "📦 Installing Brewfile.macos"
+        echo "📦 安装 Brewfile.macos"
         brew bundle --file=packages/Brewfile.macos
     else
-        echo "📦 Installing Brewfile.core"
+        echo "📦 安装 Brewfile.core"
         brew bundle --file=packages/Brewfile.core
         echo ""
-        echo "📦 Installing Brewfile.linux"
+        echo "📦 安装 Brewfile.linux"
         brew bundle --file=packages/Brewfile.linux
     fi
 
     echo ""
-    echo "✅ Package installation complete!"
+    echo "✅ 软件包安装完成!"
 
-# Install packages without upgrading existing ones
+# 安装软件包但不更新现有包
 install-packages-no-upgrade:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Installing packages (no upgrade)..."
+    echo "安装软件包 (跳过更新)..."
 
     if [ "{{PROFILE}}" = "mini" ]; then
         brew bundle --file=packages/Brewfile.mini --no-upgrade
@@ -209,28 +171,25 @@ install-packages-no-upgrade:
         brew bundle --file=packages/Brewfile.linux --no-upgrade
     fi
 
-# Verify all packages are available in Homebrew
+# 验证 Homebrew 软件包可用性
 packages-verify:
     #!/usr/bin/env bash
-    echo "━━━ Homebrew Package Verification ━━━"
+    echo "━━━ Homebrew 软件包验证 ━━━"
     echo ""
     cd packages
     failed=0
 
     for brewfile in Brewfile.core Brewfile.macos Brewfile.linux Brewfile.mini; do
-        if [ ! -f "$brewfile" ]; then
-            continue
-        fi
+        if [ ! -f "$brewfile" ]; then continue; fi
 
-        echo "Checking $brewfile..."
-
+        echo "检查 $brewfile..."
         # Check brew formulae
         while read -r pkg; do
             if [ -z "$pkg" ]; then continue; fi
             if brew info "$pkg" &>/dev/null; then
                 echo "  ✓ $pkg"
             else
-                echo "  ✗ $pkg - NOT FOUND"
+                echo "  ✗ $pkg - 未找到"
                 failed=1
             fi
         done < <(grep '^brew "' "$brewfile" 2>/dev/null | sed 's/^brew "\([^"]*\)".*/\1/' || true)
@@ -241,168 +200,236 @@ packages-verify:
             if brew info --cask "$pkg" &>/dev/null; then
                 echo "  ✓ [cask] $pkg"
             else
-                echo "  ✗ [cask] $pkg - NOT FOUND"
+                echo "  ✗ [cask] $pkg - 未找到"
                 failed=1
             fi
         done < <(grep '^cask "' "$brewfile" 2>/dev/null | sed 's/^cask "\([^"]*\)".*/\1/' || true)
-
         echo ""
     done
 
     if [ $failed -eq 0 ]; then
-        echo "✅ All packages verified successfully!"
+        echo "✅ 所有软件包验证通过!"
     else
-        echo "❌ Some packages are not available"
+        echo "❌ 部分软件包不可用"
         exit 1
     fi
 
-# Check for duplicate packages across Brewfiles
+# 检查软件包重复定义
 packages-check-duplicates:
     #!/usr/bin/env bash
     set -euo pipefail
-
-    echo "━━━ Checking for Duplicate Packages ━━━"
+    echo "━━━ 检查重复软件包 ━━━"
     echo ""
 
     # Check core vs macos
-    echo "### Core vs macOS duplicates:"
+    echo "### Core vs macOS 重复:"
     comm -12 \
         <(grep -E '^brew "' packages/Brewfile.core | sed 's/^brew "\([^"]*\)".*/\1/' | sort) \
         <(grep -E '^brew "' packages/Brewfile.macos | sed 's/^brew "\([^"]*\)".*/\1/' | sort) | \
-        sed 's/^/  ⚠️  /' || echo "  ✓ No duplicates"
+        sed 's/^/  ⚠️  /' || echo "  ✓ 无重复"
 
     echo ""
-
-    # Check core vs linux
-    echo "### Core vs Linux duplicates:"
+    echo "### Core vs Linux 重复:"
     comm -12 \
         <(grep -E '^brew "' packages/Brewfile.core | sed 's/^brew "\([^"]*\)".*/\1/' | sort) \
         <(grep -E '^brew "' packages/Brewfile.linux | sed 's/^brew "\([^"]*\)".*/\1/' | sort) | \
-        sed 's/^/  ⚠️  /' || echo "  ✓ No duplicates"
+        sed 's/^/  ⚠️  /' || echo "  ✓ 无重复"
 
     echo ""
-
-    # Check macos vs linux (excluding core)
-    echo "### macOS vs Linux duplicates (intentional Ops tools):"
+    echo "### macOS vs Linux 重复 (Ops工具例外):"
     macos_linux_dupes=$(comm -12 \
         <(grep -E '^brew "' packages/Brewfile.macos | sed 's/^brew "\([^"]*\)".*/\1/' | sort) \
         <(grep -E '^brew "' packages/Brewfile.linux | sed 's/^brew "\([^"]*\)".*/\1/' | sort))
 
     if [ -z "$macos_linux_dupes" ]; then
-        echo "  ✓ No duplicates"
+        echo "  ✓ 无重复"
     else
         echo "$macos_linux_dupes" | while read pkg; do
             if grep -q "^brew \"$pkg\"" packages/Brewfile.core; then
-                echo "  ✓ $pkg (in core - OK)"
+                echo "  ✓ $pkg (在 core 中 - OK)"
             else
-                echo "  ⚠️  $pkg (Ops tool - intentional)"
+                echo "  ⚠️  $pkg (Ops 工具 - 预期内)"
             fi
         done
     fi
 
-    echo ""
-    echo "### Package counts:"
-    echo "  Core:  $(grep -c '^brew "' packages/Brewfile.core) packages"
-    echo "  macOS: $(grep -c '^brew "' packages/Brewfile.macos) formulae + $(grep -c '^cask "' packages/Brewfile.macos) casks"
-    echo "  Linux: $(grep -c '^brew "' packages/Brewfile.linux) packages"
-    echo "  Mini:  $(grep -c '^brew "' packages/Brewfile.mini) packages"
-
-# Show package statistics and information
+# 查看软件包统计
 packages-info:
     #!/usr/bin/env bash
-    echo "━━━ Package Statistics ━━━"
-    echo ""
-
+    echo "━━━ 软件包统计 ━━━"
     core_count=$(grep -c '^brew "' packages/Brewfile.core)
     macos_brew=$(grep -c '^brew "' packages/Brewfile.macos)
     macos_cask=$(grep -c '^cask "' packages/Brewfile.macos)
     linux_count=$(grep -c '^brew "' packages/Brewfile.linux)
     mini_count=$(grep -c '^brew "' packages/Brewfile.mini)
 
-    total_unique=$(cat packages/Brewfile.* | grep -E '^(brew|cask) "' | sed 's/^[^ ]* "\([^"]*\)".*/\1/' | sort -u | wc -l | tr -d ' ')
+    echo "📊 分布:"
+    echo "  Core:  $core_count"
+    echo "  macOS: $((macos_brew + macos_cask)) ($macos_brew formula + $macos_cask cask)"
+    echo "  Linux: $linux_count"
+    echo "  Mini:  $mini_count"
 
-    echo "📊 Package Distribution:"
-    echo "  Core:  $core_count formulae"
-    echo "  macOS: $macos_brew formulae + $macos_cask casks = $((macos_brew + macos_cask)) total"
-    echo "  Linux: $linux_count formulae"
-    echo "  Mini:  $mini_count formulae"
-    echo ""
-    echo "  Total unique packages: $total_unique"
-    echo ""
-    echo "📦 Current profile ({{PROFILE}}):"
-    if [ "{{PROFILE}}" = "mini" ]; then
-        echo "  Would install: $mini_count packages"
-    elif [ "$(uname)" = "Darwin" ]; then
-        echo "  Would install: $((core_count + macos_brew + macos_cask)) packages"
-    else
-        echo "  Would install: $((core_count + linux_count)) packages"
-    fi
-
-    echo ""
-    echo "💾 Installed packages:"
-    echo "  $(brew list --formula | wc -l | tr -d ' ') formulae"
-    if [ "$(uname)" = "Darwin" ]; then
-        echo "  $(brew list --cask | wc -l | tr -d ' ') casks"
-    fi
-
-# List installed packages
+# 列出已安装的包
 packages-list:
-    @echo "━━━ Installed Packages ━━━"
-    @echo ""
-    @echo "Formulae:"
+    @echo "━━━ 已安装软件包 ━━━"
     @brew list --formula
-    @if [ "$(uname)" = "Darwin" ]; then \
-        echo ""; \
-        echo "Casks:"; \
-        brew list --cask; \
-    fi
+    @if [ "$(uname)" = "Darwin" ]; then echo ""; echo "Casks:"; brew list --cask; fi
 
-# Check for outdated packages
+# 检查可更新的包
 packages-outdated:
-    @echo "━━━ Outdated Packages ━━━"
-    @echo ""
+    @echo "━━━ 待更新软件包 ━━━"
     @brew outdated
 
-# Update Brewfile with currently installed packages
-packages-dump:
-    @echo "Generating Brewfile from current installation..."
-    @brew bundle dump --file=Brewfile.dump --force
-    @echo "✅ Saved to Brewfile.dump"
-    @echo "Review and merge changes into appropriate Brewfiles"
-
-# Cleanup unused packages
+# 清理未使用的包
 packages-cleanup:
-    @echo "Cleaning up Homebrew..."
+    @echo "清理 Homebrew..."
     brew cleanup --prune=all
     brew autoremove
-    @echo "✅ Cleanup complete"
-
-# Show package dependencies
-packages-deps package:
-    @echo "Dependencies for {{package}}:"
-    @brew deps {{package}} --tree
-
-# Search for a package
-packages-search query:
-    @echo "Searching for: {{query}}"
-    @brew search {{query}}
+    @echo "✅ 清理完成"
 
 # ------------------------------------------------------------------------------
-# 🧪 Testing & Validation
+# 🎭 Profile 管理 (Profile Management)
 # ------------------------------------------------------------------------------
 
-# Validate templates for all profiles
+# 显示当前 Profile
+profile:
+    @echo "当前 Profile: {{PROFILE}}"
+    @echo ""
+    @echo "可用 Profiles:"
+    @echo "  • macos - 全功能 macOS 工作站 (GPG, YubiKey, GUI)"
+    @echo "  • linux - 无头 Linux 服务器 (SSH-only, 无 GUI)"
+    @echo "  • mini  - 极简临时环境 (容器, Codespaces)"
+    @echo ""
+    @echo "切换方式: export HOMEUP_PROFILE=<profile>"
+
+# 切换到 macos Profile
+profile-macos:
+    @echo "export HOMEUP_PROFILE=macos"
+    @echo "请运行: source ~/.zshrc 或重启 Shell"
+
+# 切换到 linux Profile
+profile-linux:
+    @echo "export HOMEUP_PROFILE=linux"
+    @echo "请运行: source ~/.zshrc 或重启 Shell"
+
+# 切换到 mini Profile
+profile-mini:
+    @echo "export HOMEUP_PROFILE=mini"
+    @echo "请运行: source ~/.zshrc 或重启 Shell"
+
+# 比较两个 Profile 的差异
+profile-diff from to:
+    @echo "比较 Profile: {{from}} vs {{to}}"
+    @echo ""
+    @echo "=== 在 {{from}} 中但不在 {{to}} 中的包 ==="
+    @comm -23 \
+        <(grep -E '^brew "' packages/Brewfile.{{from}} 2>/dev/null | sed 's/^brew "\([^"]*\)".*/\1/' | sort || true) \
+        <(grep -E '^brew "' packages/Brewfile.{{to}} 2>/dev/null | sed 's/^brew "\([^"]*\)".*/\1/' | sort || true) || true
+
+# ------------------------------------------------------------------------------
+# 🔍 诊断与维护 (Diagnostics & Maintenance)
+# ------------------------------------------------------------------------------
+
+# 运行全面健康检查
+doctor:
+    #!/usr/bin/env bash
+    echo "━━━ Homeup 健康检查 ━━━"
+    echo ""
+    errors=0
+
+    # 1. 检查工具
+    echo "🔧 检查必要工具..."
+    for cmd in brew chezmoi git; do
+        if command -v $cmd &>/dev/null; then echo "  ✓ $cmd"; else echo "  ✗ $cmd (缺失)"; errors=$((errors + 1)); fi
+    done
+
+    echo "   检查开发工具 (可选)..."
+    for cmd in shfmt shellcheck lefthook topgrade; do
+        if command -v $cmd &>/dev/null; then echo "  ✓ $cmd"; else echo "  ○ $cmd (缺失 - 建议安装)"; fi
+    done
+
+    # 2. 检查文件结构
+    echo ""
+    echo "📂 检查文件结构..."
+    for file in bootstrap.sh packages/Brewfile.core; do
+        if [ -f "$file" ]; then echo "  ✓ $file"; else echo "  ✗ $file (缺失)"; errors=$((errors + 1)); fi
+    done
+
+    # 3. 检查 Profile
+    echo ""
+    echo "🎭 检查 Profile 配置..."
+    echo "  当前: {{PROFILE}}"
+    if [[ "{{PROFILE}}" =~ ^(macos|linux|mini)$ ]]; then echo "  ✓ Profile 有效"; else echo "  ✗ Profile 无效 (必须是: macos, linux, mini)"; errors=$((errors + 1)); fi
+
+    # 4. 检查敏感文件
+    echo ""
+    echo "🔐 检查敏感文件..."
+    if [ -f "$HOME/.ssh/id_ed25519" ] || [ -f "$HOME/.ssh/id_rsa" ]; then echo "  ✓ SSH Key 存在"; else echo "  ⚠️  未发现常见 SSH Key"; fi
+
+    echo ""
+    if [ $errors -eq 0 ]; then echo "✅ 所有检查通过!"; else echo "❌ 发现 $errors 个问题"; exit 1; fi
+
+# 全系统升级 (Topgrade)
+upgrade:
+    @if command -v topgrade &>/dev/null; then \
+        echo "运行全系统升级 (Topgrade)..."; \
+        topgrade; \
+    else \
+        echo "⚠️  Topgrade 未安装，回退到 Homebrew 更新..."; \
+        just update-brew; \
+    fi
+
+# 更新 Homebrew
+update-brew:
+    @echo "更新 Homebrew..."
+    @brew update && brew upgrade && brew cleanup
+    @echo "✅ Homebrew 更新完成"
+
+# 清理缓存
+clean:
+    @echo "清理缓存..."
+    @chezmoi purge --force || true
+    @rm -rf /tmp/chezmoi-test-* 2>/dev/null || true
+    @echo "✅ 缓存已清理"
+
+# 深度清理 (包含 Homebrew)
+clean-all:
+    @echo "深度清理..."
+    @just clean
+    @just packages-cleanup
+    @echo "✅ 深度清理完成"
+
+# ------------------------------------------------------------------------------
+# 🧪 测试与验证 (Testing & CI)
+# ------------------------------------------------------------------------------
+
+# 运行所有 CI 检查 (本地)
+ci:
+    @echo "━━━ 运行 CI 检查 ━━━"
+    @echo "1/5: Linting..." && just lint
+    @echo "2/5: 软件包验证..." && just packages-verify
+    @echo "3/5: 重复检查..." && just packages-check-duplicates
+    @echo "4/5: 模板验证..." && just validate
+    @echo "5/5: 健康检查..." && just doctor
+    @echo ""
+    @echo "✅ 所有 CI 检查通过!"
+
+# 快速检查 (CI 的子集)
+check:
+    @echo "运行快速检查..."
+    @just validate
+    @just packages-check-duplicates
+    @echo "✅ 快速检查通过"
+
+# 验证所有 Profile 的模板
 validate:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "━━━ Validating Templates ━━━"
-    echo ""
-
+    echo "━━━ 验证模板 ━━━"
     failed=0
     for profile in macos linux mini; do
-        echo "Testing profile: $profile"
+        echo "测试 Profile: $profile"
         export HOMEUP_PROFILE=$profile
-
         if chezmoi init --source . --destination /tmp/chezmoi-test-$profile --dry-run 2>/dev/null; then
             echo "  ✅ $profile: OK"
         else
@@ -410,503 +437,56 @@ validate:
             failed=1
         fi
     done
-
-    echo ""
-    if [ $failed -eq 0 ]; then
-        echo "✅ All profiles validated successfully!"
-    else
-        echo "❌ Some profiles failed validation"
-        exit 1
-    fi
-
-# Test specific profile
-test profile="macos":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "━━━ Testing Profile: {{profile}} ━━━"
-    echo ""
-
-    export HOMEUP_PROFILE={{profile}}
-
-    echo "1. Template validation..."
-    chezmoi init --source . --destination /tmp/chezmoi-test-{{profile}} --dry-run
-
-    echo ""
-    echo "2. Checking Brewfiles..."
-    if [ "{{profile}}" = "mini" ]; then
-        [ -f packages/Brewfile.mini ] && echo "  ✓ Brewfile.mini exists"
-    elif [ "{{profile}}" = "macos" ]; then
-        [ -f packages/Brewfile.core ] && echo "  ✓ Brewfile.core exists"
-        [ -f packages/Brewfile.macos ] && echo "  ✓ Brewfile.macos exists"
-    else
-        [ -f packages/Brewfile.core ] && echo "  ✓ Brewfile.core exists"
-        [ -f packages/Brewfile.linux ] && echo "  ✓ Brewfile.linux exists"
-    fi
-
-    echo ""
-    echo "✅ Profile {{profile}} is valid"
-
-# Run bootstrap in dry-run mode
-bootstrap-dry profile="macos":
-    @echo "━━━ Bootstrap Dry-Run: {{profile}} ━━━"
-    @HOMEUP_PROFILE={{profile}} ./bootstrap.sh --help || true
+    if [ $failed -eq 0 ]; then echo "✅ 所有 Profile 验证成功"; else exit 1; fi
 
 # ------------------------------------------------------------------------------
-# 🔍 Diagnostics & Debugging
+# 🛠️ 开发工具 (Development)
 # ------------------------------------------------------------------------------
 
-# Run comprehensive health checks
-doctor:
-    #!/usr/bin/env bash
-    echo "━━━ Homeup Health Check ━━━"
-    echo ""
-
-    errors=0
-
-    # Check required commands
-    echo "🔧 Checking required tools..."
-    for cmd in brew chezmoi git; do
-        if command -v $cmd &>/dev/null; then
-            echo "  ✓ $cmd"
-        else
-            echo "  ✗ $cmd (NOT FOUND)"
-            errors=$((errors + 1))
-        fi
-    done
-
-    echo ""
-    echo "📂 Checking file structure..."
-    for file in bootstrap.sh packages/Brewfile.core packages/Brewfile.macos packages/Brewfile.linux packages/Brewfile.mini; do
-        if [ -f "$file" ]; then
-            echo "  ✓ $file"
-        else
-            echo "  ✗ $file (MISSING)"
-            errors=$((errors + 1))
-        fi
-    done
-
-    echo ""
-    echo "🎭 Checking profile configuration..."
-    echo "  Current: {{PROFILE}}"
-    if [[ "{{PROFILE}}" =~ ^(macos|linux|mini)$ ]]; then
-        echo "  ✓ Valid profile"
-    else
-        echo "  ✗ Invalid profile (must be: macos, linux, or mini)"
-        errors=$((errors + 1))
-    fi
-
-    echo ""
-    echo "🔐 Checking sensitive files..."
-    if [ -f "$HOME/.ssh/id_ed25519" ]; then
-        echo "  ✓ SSH key exists"
-    else
-        echo "  ⚠️  No SSH key found (run: ssh-keygen -t ed25519)"
-    fi
-
-    if [ "{{PROFILE}}" = "macos" ]; then
-        if command -v gpg &>/dev/null; then
-            echo "  ✓ GPG installed"
-        else
-            echo "  ⚠️  GPG not installed (expected for macOS profile)"
-        fi
-    fi
-
-    echo ""
-    if [ $errors -eq 0 ]; then
-        echo "✅ All checks passed!"
-    else
-        echo "❌ Found $errors error(s)"
-        exit 1
-    fi
-
-# Debug chezmoi configuration
-debug:
-    @echo "━━━ Chezmoi Debug Information ━━━"
-    @echo ""
-    @echo "Data:"
-    @chezmoi data | head -50
-    @echo ""
-    @echo "Managed files:"
-    @chezmoi managed | head -20
-    @echo ""
-    @echo "Source path: $(chezmoi source-path)"
-
-# Show chezmoi diff with context
-diff-full:
-    @echo "━━━ Full Diff with Context ━━━"
-    @chezmoi diff --no-pager
-
-# Find which template generates a file
-find-template file:
-    @echo "Source template for {{file}}:"
-    @chezmoi source-path {{file}}
-
-# ------------------------------------------------------------------------------
-# 🛠️ Development & Git
-# ------------------------------------------------------------------------------
-
-# Install git hooks (lefthook)
+# 安装 Git Hooks
 install-hooks:
-    @echo "Installing git hooks..."
-    @lefthook install
-    @echo "✅ Git hooks installed"
+    @echo "安装 Git hooks..."
+    @if command -v lefthook &>/dev/null; then \
+        lefthook install; \
+    else \
+        echo "⚠️  未安装 lefthook (brew install lefthook)"; \
+    fi
 
-# Uninstall git hooks
-uninstall-hooks:
-    @echo "Uninstalling git hooks..."
-    @lefthook uninstall
-    @echo "✅ Git hooks uninstalled"
-
-# Run pre-commit hooks manually
-pre-commit:
-    @echo "Running pre-commit hooks..."
-    @lefthook run pre-commit
-
-# Run all linters
-lint:
-    @echo "━━━ Running Linters ━━━"
-    @echo ""
-    @echo "ShellCheck:"
-    @find . -name "*.sh" -type f ! -path "./.git/*" -exec shellcheck {} \; || true
-    @echo ""
-    @echo "Template Validation:"
-    @just validate
-
-# Format shell scripts (requires shfmt)
+# 运行代码格式化
 fmt:
-    @echo "Formatting shell scripts..."
+    @echo "格式化 Shell 脚本..."
     @if command -v shfmt &>/dev/null; then \
         find . -name "*.sh" -type f ! -path "./.git/*" -exec shfmt -w -i 4 {} \;; \
-        echo "✅ Formatted"; \
+        echo "✅ 完成"; \
     else \
-        echo "⚠️  shfmt not installed, skipping"; \
+        echo "⚠️  未安装 shfmt"; \
     fi
 
-# Quick commit with message
+# 运行 Linters
+lint:
+    @echo "运行 ShellCheck..."
+    @if command -v shellcheck &>/dev/null; then \
+        find . -name "*.sh" -type f ! -path "./.git/*" -exec shellcheck {} \;; \
+    else \
+        echo "⚠️  未安装 shellcheck (brew install shellcheck)"; \
+    fi
+
+# 快速提交
 commit msg:
     @git add -A
     @git commit -m "{{msg}}"
-    @echo "✅ Committed: {{msg}}"
+    @echo "✅ 已提交: {{msg}}"
 
-# Amend last commit
-amend:
-    @git commit --amend --no-edit
-    @echo "✅ Amended last commit"
-
-# Push to remote
-push:
-    @git push
-    @echo "✅ Pushed to remote"
-
-# Pull from remote
-pull:
-    @git pull --rebase
-    @echo "✅ Pulled from remote"
-
-# Show git log (pretty)
-log count="20":
-    @git log --oneline -{{count}} --graph --decorate
-
-# Show git status
-st:
-    @git status -sb
-
-# Create a new branch
-branch name:
-    @git checkout -b {{name}}
-    @echo "✅ Created and switched to branch: {{name}}"
-
-# ------------------------------------------------------------------------------
-# 🚀 CI/CD
-# ------------------------------------------------------------------------------
-
-# Run all CI checks locally
-ci:
-    @echo "━━━ Running CI Checks ━━━"
-    @echo ""
-    @echo "1/5: Linting..."
-    @just lint
-    @echo ""
-    @echo "2/5: Package verification..."
-    @just packages-verify
-    @echo ""
-    @echo "3/5: Duplicate check..."
-    @just packages-check-duplicates
-    @echo ""
-    @echo "4/5: Template validation..."
-    @just validate
-    @echo ""
-    @echo "5/5: Health check..."
-    @just doctor
-    @echo ""
-    @echo "✅ All CI checks passed!"
-
-# Run quick checks (fast subset of CI)
-check:
-    @echo "Running quick checks..."
-    @just validate
-    @just packages-check-duplicates
-    @echo "✅ Quick checks passed"
-
-# Trigger GitHub Actions workflow
-ci-trigger:
-    @gh workflow run test.yml
-    @echo "✅ GitHub Actions triggered"
-
-# Watch GitHub Actions status
-ci-status:
-    @echo "Recent workflow runs:"
-    @gh run list --limit 5
-
-# View latest GitHub Actions run
-ci-logs:
-    @gh run view --log
-
-# ------------------------------------------------------------------------------
-# 🔄 Maintenance & Cleanup
-# ------------------------------------------------------------------------------
-
-# Full system update (topgrade)
-upgrade:
-    @echo "Running topgrade..."
-    @topgrade
-
-# Update Homebrew and packages
-update-brew:
-    @echo "Updating Homebrew..."
-    @brew update
-    @brew upgrade
-    @brew cleanup
-    @echo "✅ Homebrew updated"
-
-# Clean chezmoi cache and temp files
-clean:
-    @echo "Cleaning caches..."
-    @chezmoi purge --force || true
-    @rm -rf /tmp/chezmoi-test-* 2>/dev/null || true
-    @echo "✅ Caches cleaned"
-
-# Clean everything (brew + chezmoi + temp)
-clean-all:
-    @echo "Deep cleaning..."
-    @just clean
-    @just packages-cleanup
-    @echo "✅ Deep clean complete"
-
-# Reset chezmoi to clean state (dangerous!)
-[confirm("⚠️  This will remove ALL chezmoi state. Continue?")]
-reset:
-    @chezmoi purge --force
-    @echo "✅ Chezmoi state purged"
-
-# Backup current dotfiles
-backup:
-    #!/usr/bin/env bash
-    backup_dir="$HOME/dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
-    echo "Creating backup in $backup_dir..."
-    mkdir -p "$backup_dir"
-
-    # Backup key files
-    for file in .zshrc .gitconfig .ssh/config .config/nvim .config/starship.toml; do
-        if [ -e "$HOME/$file" ]; then
-            cp -r "$HOME/$file" "$backup_dir/" 2>/dev/null || true
-        fi
-    done
-
-    echo "✅ Backup created: $backup_dir"
-
-# Show disk usage of Homebrew
-brew-size:
-    @echo "Homebrew disk usage:"
-    @du -sh $(brew --prefix) 2>/dev/null || echo "Unable to calculate"
-    @echo ""
-    @echo "Cache size:"
-    @du -sh $(brew --cache) 2>/dev/null || echo "Unable to calculate"
-
-# ------------------------------------------------------------------------------
-# 📊 Statistics & Reporting
-# ------------------------------------------------------------------------------
-
-# Show comprehensive statistics
-stats:
-    #!/usr/bin/env bash
-    echo "━━━ Homeup Statistics ━━━"
-    echo ""
-
-    echo "📦 Packages:"
-    just packages-info
-
-    echo ""
-    echo "📁 Managed Files:"
-    echo "  Total: $(chezmoi managed | wc -l) files"
-
-    echo ""
-    echo "🔀 Git Information:"
-    echo "  Commits: $(git rev-list --count HEAD)"
-    echo "  Branch: $(git branch --show-current)"
-    echo "  Last commit: $(git log -1 --format='%ar')"
-
-    if command -v tokei &>/dev/null; then
-        echo ""
-        echo "📊 Code Statistics:"
-        tokei --exclude .git
-    fi
-
-# Generate report for current setup
-report:
-    #!/usr/bin/env bash
-    report_file="homeup-report-$(date +%Y%m%d-%H%M%S).md"
-
-    cat > "$report_file" << EOF
-    # Homeup Setup Report
-
-    Generated: $(date)
-
-    ## System Information
-    - OS: $(uname -s) $(uname -r)
-    - Profile: {{PROFILE}}
-    - Chezmoi: $(chezmoi --version | head -1)
-    - Homebrew: $(brew --version | head -1)
-
-    ## Package Statistics
-    EOF
-
-    just packages-info >> "$report_file"
-
-    cat >> "$report_file" << EOF
-
-    ## Managed Files
-    $(chezmoi managed | wc -l) files under management
-
-    ## Git Status
-    - Branch: $(git branch --show-current)
-    - Commits: $(git rev-list --count HEAD)
-    - Last commit: $(git log -1 --format='%h %s')
-    EOF
-
-    echo "✅ Report generated: $report_file"
-
-# ------------------------------------------------------------------------------
-# 🎓 Learning & Documentation
-# ------------------------------------------------------------------------------
-
-# Show common usage examples
-examples:
-    @echo "━━━ Common Usage Examples ━━━"
-    @echo ""
-    @echo "🏁 Initial Setup:"
-    @echo "  just install-packages    # Install all packages"
-    @echo "  just apply               # Apply dotfiles"
-    @echo "  just install-hooks       # Setup git hooks"
-    @echo ""
-    @echo "📝 Daily Usage:"
-    @echo "  just diff                # Check what would change"
-    @echo "  just apply               # Apply changes"
-    @echo "  just status              # See modified files"
-    @echo ""
-    @echo "🔄 Updates:"
-    @echo "  just update              # Update from remote"
-    @echo "  just upgrade             # Update all packages"
-    @echo "  just packages-outdated   # Check for updates"
-    @echo ""
-    @echo "🧹 Maintenance:"
-    @echo "  just clean               # Clean caches"
-    @echo "  just packages-cleanup    # Clean Homebrew"
-    @echo "  just doctor              # Health check"
-    @echo ""
-    @echo "🧪 Before Committing:"
-    @echo "  just ci                  # Run all checks"
-    @echo "  just check               # Quick checks"
-
-# Show keyboard shortcuts and aliases
-shortcuts:
-    @echo "━━━ Useful Shortcuts ━━━"
-    @echo ""
-    @echo "Git:"
-    @echo "  just st                  # git status"
-    @echo "  just log                 # git log"
-    @echo "  just commit \"msg\"        # Quick commit"
-    @echo ""
-    @echo "Chezmoi:"
-    @echo "  just add ~/.file         # Track new file"
-    @echo "  just edit ~/.file        # Edit tracked file"
-    @echo ""
-    @echo "Packages:"
-    @echo "  just packages-search X   # Search for package"
-    @echo "  just packages-deps X     # Show dependencies"
-
-# Open documentation
-docs:
-    @echo "Opening documentation..."
-    @if [ -f "README.md" ]; then \
-        if command -v glow &>/dev/null; then \
-            glow README.md; \
-        elif command -v bat &>/dev/null; then \
-            bat README.md; \
-        else \
-            cat README.md; \
-        fi; \
-    else \
-        echo "README.md not found"; \
-    fi
-
-# ------------------------------------------------------------------------------
-# 🔧 Advanced Operations
-# ------------------------------------------------------------------------------
-
-# Initialize a new machine with this dotfiles
-[confirm("This will initialize chezmoi. Continue?")]
+# 初始化新机器
+[confirm("这将初始化新机器配置。继续?")]
 init:
     #!/usr/bin/env bash
-    echo "Initializing Homeup on new machine..."
-
-    # Run bootstrap
+    echo "初始化 Homeup..."
     ./bootstrap.sh -p {{PROFILE}}
+    echo "✅ 初始化完成"
 
-    echo ""
-    echo "✅ Initialization complete!"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Review changes: just diff"
-    echo "  2. Apply dotfiles: just apply"
-    echo "  3. Install packages: just install-packages"
-
-# Re-run all installation scripts
-reinstall:
-    @echo "⚠️  Re-running installation scripts..."
-    @chezmoi init --apply --force
-
-# Export current configuration for backup
-export:
-    #!/usr/bin/env bash
-    export_dir="homeup-export-$(date +%Y%m%d-%H%M%S)"
-    mkdir -p "$export_dir"
-
-    echo "Exporting configuration to $export_dir..."
-
-    cp -r packages "$export_dir/"
-    cp -r .chezmoiscripts "$export_dir/" 2>/dev/null || true
-    cp bootstrap.sh justfile README.md "$export_dir/"
-
-    tar -czf "$export_dir.tar.gz" "$export_dir"
-    rm -rf "$export_dir"
-
-    echo "✅ Exported to: $export_dir.tar.gz"
-
-# Check for security issues
-security-check:
-    @echo "━━━ Security Check ━━━"
-    @echo ""
-    @echo "Checking for secrets in git history..."
-    @if command -v gitleaks &>/dev/null; then \
-        gitleaks detect --no-git; \
-    else \
-        echo "⚠️  gitleaks not installed (run: brew install gitleaks)"; \
-    fi
-    @echo ""
-    @echo "Checking file permissions..."
-    @find . -name "*.sh" ! -path "./.git/*" -exec ls -l {} \; | grep -v "^-rwxr"
-
-# ==============================================================================
-# End of Justfile
-# ==============================================================================
+# 重置 Chezmoi (危险操作)
+[confirm("⚠️  这将清除所有 chezmoi 状态。继续?")]
+reset:
+    @chezmoi purge --force
+    @echo "✅ Chezmoi 状态已清除"

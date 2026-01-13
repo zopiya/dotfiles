@@ -68,7 +68,7 @@ export HOMEUP_OS="" HOMEUP_ARCH="" HOMEUP_DISTRO="" HOMEUP_PROFILE=""
 # ------------------------------------------------------------------------------
 
 show_help() {
-    cat << 'EOF'
+    cat <<'EOF'
 Homeup Bootstrap - Multi-Profile Dotfiles Setup
 
 Usage: ./bootstrap.sh [OPTIONS]
@@ -114,47 +114,47 @@ show_version() {
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -p|--profile)
-                if [[ -z "${2:-}" ]]; then
-                    printf "%s[ERROR]%s --profile requires a value\n" "$C_RED" "$C_RESET" >&2
-                    exit 1
-                fi
-                ARG_PROFILE="$2"
-                shift 2
-                ;;
-            -r|--repo)
-                if [[ -z "${2:-}" ]]; then
-                    printf "%s[ERROR]%s --repo requires a value\n" "$C_RED" "$C_RESET" >&2
-                    exit 1
-                fi
-                ARG_REPO="$2"
-                shift 2
-                ;;
-            -a|--apply)
-                ARG_APPLY=true
-                shift
-                ;;
-            -y|--yes)
-                ARG_YES=true
-                shift
-                ;;
-            -h|--help)
-                show_help
-                exit 0
-                ;;
-            -v|--version)
-                show_version
-                exit 0
-                ;;
-            -*)
-                printf "%s[ERROR]%s Unknown option: %s\n" "$C_RED" "$C_RESET" "$1" >&2
-                printf "Use --help for usage information\n" >&2
+        -p | --profile)
+            if [[ -z "${2:-}" ]]; then
+                printf "%s[ERROR]%s --profile requires a value\n" "$C_RED" "$C_RESET" >&2
                 exit 1
-                ;;
-            *)
-                printf "%s[ERROR]%s Unexpected argument: %s\n" "$C_RED" "$C_RESET" "$1" >&2
+            fi
+            ARG_PROFILE="$2"
+            shift 2
+            ;;
+        -r | --repo)
+            if [[ -z "${2:-}" ]]; then
+                printf "%s[ERROR]%s --repo requires a value\n" "$C_RED" "$C_RESET" >&2
                 exit 1
-                ;;
+            fi
+            ARG_REPO="$2"
+            shift 2
+            ;;
+        -a | --apply)
+            ARG_APPLY=true
+            shift
+            ;;
+        -y | --yes)
+            ARG_YES=true
+            shift
+            ;;
+        -h | --help)
+            show_help
+            exit 0
+            ;;
+        -v | --version)
+            show_version
+            exit 0
+            ;;
+        -*)
+            printf "%s[ERROR]%s Unknown option: %s\n" "$C_RED" "$C_RESET" "$1" >&2
+            printf "Use --help for usage information\n" >&2
+            exit 1
+            ;;
+        *)
+            printf "%s[ERROR]%s Unexpected argument: %s\n" "$C_RED" "$C_RESET" "$1" >&2
+            exit 1
+            ;;
         esac
     done
 
@@ -167,12 +167,12 @@ parse_args() {
     # Validate profile if provided
     if [[ -n "$ARG_PROFILE" ]]; then
         case "$ARG_PROFILE" in
-            macos|linux|mini) ;;
-            *)
-                printf "%s[ERROR]%s Invalid profile: %s\n" "$C_RED" "$C_RESET" "$ARG_PROFILE" >&2
-                printf "Valid profiles: macos, linux, mini\n" >&2
-                exit 1
-                ;;
+        macos | linux | mini) ;;
+        *)
+            printf "%s[ERROR]%s Invalid profile: %s\n" "$C_RED" "$C_RESET" "$ARG_PROFILE" >&2
+            printf "Valid profiles: macos, linux, mini\n" >&2
+            exit 1
+            ;;
         esac
     fi
 }
@@ -237,7 +237,7 @@ check_prerequisites() {
     local failed=0
 
     # Check disk space (require at least 5GB free)
-    local required_space=$((5 * 1024 * 1024))  # 5GB in KB
+    local required_space=$((5 * 1024 * 1024)) # 5GB in KB
     local available_space
     if [[ "$_OS" == "darwin" ]]; then
         available_space=$(df -k ~ | awk 'NR==2 {print $4}')
@@ -246,7 +246,7 @@ check_prerequisites() {
     fi
 
     if [[ -n "$available_space" ]] && [[ "$available_space" -lt "$required_space" ]]; then
-        msg_fail "Insufficient disk space: $(( available_space / 1024 / 1024 ))GB available, 5GB required"
+        msg_fail "Insufficient disk space: $((available_space / 1024 / 1024))GB available, 5GB required"
         failed=1
     fi
 
@@ -323,7 +323,7 @@ check_dependencies() {
 # Output
 # ------------------------------------------------------------------------------
 
-msg_ok()   { printf "%s[OK]%s   %s\n" "$C_GREEN" "$C_RESET" "$1"; }
+msg_ok() { printf "%s[OK]%s   %s\n" "$C_GREEN" "$C_RESET" "$1"; }
 msg_skip() { printf "%s[SKIP]%s %s\n" "$C_GRAY" "$C_RESET" "$1"; }
 msg_fail() { printf "%s[FAIL]%s %s\n" "$C_RED" "$C_RESET" "$1" >&2; }
 msg_info() { printf "       %s\n" "$1"; }
@@ -349,7 +349,7 @@ spinner() {
 
     while kill -0 "$pid" 2>/dev/null; do
         printf "\r\033[K%s%s%s %s" "$C_CYAN" "${SPINNER_FRAMES:frame:1}" "$C_RESET" "$message"
-        frame=$(( (frame + 1) % ${#SPINNER_FRAMES} ))
+        frame=$(((frame + 1) % ${#SPINNER_FRAMES}))
         sleep "$delay"
     done
     printf "\r\033[K"
@@ -452,9 +452,9 @@ detect_os() {
     os="$(uname -s)"
 
     case "$os" in
-        Darwin) _OS="darwin" ;;
-        Linux)  _OS="linux" ;;
-        *)      die "Unsupported OS: $os" ;;
+    Darwin) _OS="darwin" ;;
+    Linux) _OS="linux" ;;
+    *) die "Unsupported OS: $os" ;;
     esac
 
     HOMEUP_OS="$_OS"
@@ -466,11 +466,11 @@ detect_arch() {
     arch="$(uname -m)"
 
     case "$arch" in
-        x86_64)       _ARCH="x86_64" ;;
-        amd64)        _ARCH="x86_64" ;;
-        aarch64)      _ARCH="arm64" ;;
-        arm64)        _ARCH="arm64" ;;
-        *)            die "Unsupported architecture: $arch" ;;
+    x86_64) _ARCH="x86_64" ;;
+    amd64) _ARCH="x86_64" ;;
+    aarch64) _ARCH="arm64" ;;
+    arm64) _ARCH="arm64" ;;
+    *) die "Unsupported architecture: $arch" ;;
     esac
 
     HOMEUP_ARCH="$_ARCH"
@@ -487,21 +487,21 @@ detect_distro() {
 
         # Normalize to distro family
         case "$id" in
-            ubuntu|debian|pop|mint|raspbian|kali)
-                _DISTRO="debian"
-                ;;
-            fedora|rhel|centos|almalinux|rocky)
-                _DISTRO="fedora"
-                ;;
-            arch|manjaro|endeavouros)
-                _DISTRO="arch"
-                ;;
-            alpine)
-                _DISTRO="alpine"
-                ;;
-            *)
-                _DISTRO="$id"
-                ;;
+        ubuntu | debian | pop | mint | raspbian | kali)
+            _DISTRO="debian"
+            ;;
+        fedora | rhel | centos | almalinux | rocky)
+            _DISTRO="fedora"
+            ;;
+        arch | manjaro | endeavouros)
+            _DISTRO="arch"
+            ;;
+        alpine)
+            _DISTRO="alpine"
+            ;;
+        *)
+            _DISTRO="$id"
+            ;;
         esac
     else
         _DISTRO="unknown"
@@ -560,12 +560,12 @@ auto_detect_profile() {
 validate_profile() {
     local profile="$1"
     case "$profile" in
-        macos|linux|mini)
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
+    macos | linux | mini)
+        return 0
+        ;;
+    *)
+        return 1
+        ;;
     esac
 }
 
@@ -612,13 +612,13 @@ detect_profile() {
         local user_input=""
         if read -t "$PROFILE_CONFIRM_TIMEOUT" -r user_input; then
             # User provided input
-            user_input="${user_input,,}"  # lowercase
+            user_input="${user_input,,}"   # lowercase
             user_input="${user_input// /}" # trim spaces
 
             if [[ -n "$user_input" ]]; then
                 if validate_profile "$user_input"; then
                     final_profile="$user_input"
-                    printf "\033[A\033[K"  # Clear the input line
+                    printf "\033[A\033[K" # Clear the input line
                     msg_ok "Profile: $final_profile (user override)"
                 else
                     printf "\033[A\033[K"
@@ -692,30 +692,30 @@ install_linux_deps() {
     local update_cmd="" install_cmd="" packages=""
 
     case "$_DISTRO" in
-        debian)
-            update_cmd="sudo apt-get update -qq"
-            install_cmd="sudo apt-get install -y -qq"
-            packages="git curl build-essential procps file"
-            ;;
-        fedora)
-            update_cmd="sudo dnf check-update -q || true"
-            install_cmd="sudo dnf install -y -q"
-            packages="git curl @development-tools procps-ng file"
-            ;;
-        arch)
-            update_cmd="sudo pacman -Sy --noconfirm"
-            install_cmd="sudo pacman -S --noconfirm --needed"
-            packages="git curl base-devel procps-ng file"
-            ;;
-        alpine)
-            update_cmd="sudo apk update -q"
-            install_cmd="sudo apk add --no-cache -q"
-            packages="git curl build-base procps file bash"
-            ;;
-        *)
-            msg_skip "System dependencies (unsupported distro: $_DISTRO)"
-            return 0
-            ;;
+    debian)
+        update_cmd="sudo apt-get update -qq"
+        install_cmd="sudo apt-get install -y -qq"
+        packages="git curl build-essential procps file"
+        ;;
+    fedora)
+        update_cmd="sudo dnf check-update -q || true"
+        install_cmd="sudo dnf install -y -q"
+        packages="git curl @development-tools procps-ng file"
+        ;;
+    arch)
+        update_cmd="sudo pacman -Sy --noconfirm"
+        install_cmd="sudo pacman -S --noconfirm --needed"
+        packages="git curl base-devel procps-ng file"
+        ;;
+    alpine)
+        update_cmd="sudo apk update -q"
+        install_cmd="sudo apk add --no-cache -q"
+        packages="git curl build-base procps file bash"
+        ;;
+    *)
+        msg_skip "System dependencies (unsupported distro: $_DISTRO)"
+        return 0
+        ;;
     esac
 
     (
@@ -800,7 +800,7 @@ export MANPATH=\"$BREW_PREFIX/share/man\${MANPATH+:\$MANPATH}:\"
 export INFOPATH=\"$BREW_PREFIX/share/info:\${INFOPATH:-}\""
     fi
 
-    printf '%s\n' "$shellenv_content" > "$BREW_SHELLENV_FILE"
+    printf '%s\n' "$shellenv_content" >"$BREW_SHELLENV_FILE"
     chmod 644 "$BREW_SHELLENV_FILE"
 
     # Add sourcing snippet to shell profiles (idempotent)
@@ -814,7 +814,7 @@ export INFOPATH=\"$BREW_PREFIX/share/info:\${INFOPATH:-}\""
             continue
         fi
         # Create file if not exists, append snippet
-        printf '\n%s\n%s\n' "$marker" "$snippet" >> "$profile"
+        printf '\n%s\n%s\n' "$marker" "$snippet" >>"$profile"
     done
 
     return 0
@@ -904,7 +904,7 @@ install_chezmoi() {
 # ------------------------------------------------------------------------------
 
 print_banner() {
-    cat << 'EOF'
+    cat <<'EOF'
     __  __
    / / / /___  ____ ___  ___  __  ______
   / /_/ / __ \/ __ `__ \/ _ \/ / / / __ \
