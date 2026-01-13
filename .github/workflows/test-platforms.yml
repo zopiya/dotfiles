@@ -1,7 +1,7 @@
 # ==============================================================================
-# Homeup CI Test Workflow
+# Platform Integration Tests
 # ==============================================================================
-# Tests bootstrap.sh and chezmoi configuration across all profiles.
+# Tests bootstrap.sh and chezmoi configuration across all supported platforms.
 #
 # Matrix:
 #   - macOS + macos (full setup with GPG signing)
@@ -11,16 +11,10 @@
 #   - Fedora + linux (headless server/workstation)
 # ==============================================================================
 
-name: Test
+name: Platform Tests
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "*.md"
-      - "LICENSE"
-  pull_request:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
     inputs:
       profile:
@@ -479,68 +473,3 @@ jobs:
 
             echo "=== Linux Profile Verified ==="
           '
-
-  # ----------------------------------------------------------------------------
-  # Template Syntax Validation
-  # ----------------------------------------------------------------------------
-  validate-templates:
-    name: Validate Templates
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install chezmoi
-        run: |
-          sudo snap install chezmoi --classic
-
-      - name: Validate Template Syntax
-        run: |
-          echo "=== Validating Chezmoi Templates ==="
-
-          # Test each profile
-          for profile in macos mini linux; do
-            echo "--- Testing profile: $profile ---"
-            export HOMEUP_PROFILE=$profile
-
-            # Dry-run to check template rendering
-            chezmoi init --source . --destination /tmp/chezmoi-test-$profile --dry-run || {
-              echo "FAIL: Template error for profile $profile"
-              exit 1
-            }
-            echo "OK: $profile templates valid"
-          done
-
-          echo "=== All Templates Valid ==="
-
-  # ----------------------------------------------------------------------------
-  # Shell Script Linting
-  # ----------------------------------------------------------------------------
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install shellcheck
-        run: sudo apt-get install -y shellcheck
-
-      - name: Lint bootstrap.sh
-        run: shellcheck bootstrap.sh
-
-      - name: Lint All Shell Files
-        run: |
-          exit_code=0
-          while IFS= read -r file; do
-            echo "Checking $file..."
-            if ! shellcheck "$file"; then
-              echo "ERROR: shellcheck failed for $file"
-              exit_code=1
-            fi
-          done < <(find . -name "*.sh" -type f)
-          exit $exit_code

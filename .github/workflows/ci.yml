@@ -1,0 +1,81 @@
+# ==============================================================================
+# Main CI Workflow
+# ==============================================================================
+# Orchestrates all tests for the Homeup project.
+# This is the main entry point that triggers on push and pull requests.
+#
+# Test Suite:
+#   1. Platform Tests - macOS, Debian, Fedora (test-platforms.yml)
+#   2. Quality Tests - Linting & Template validation (test-quality.yml)
+#   3. Justfile Tests - Just commands & integration (test-justfile.yml)
+#
+# All tests run in parallel for faster feedback.
+# ==============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+      - ".github/workflows/CI_TESTING_GUIDE.md"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Limit concurrent runs per branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Platform Integration Tests
+  # ----------------------------------------------------------------------------
+  platform-tests:
+    name: Platform Tests
+    uses: ./.github/workflows/test-platforms.yml
+
+  # ----------------------------------------------------------------------------
+  # Code Quality & Validation
+  # ----------------------------------------------------------------------------
+  quality-tests:
+    name: Quality Tests
+    uses: ./.github/workflows/test-quality.yml
+
+  # ----------------------------------------------------------------------------
+  # Justfile Tests
+  # ----------------------------------------------------------------------------
+  justfile-tests:
+    name: Justfile Tests
+    uses: ./.github/workflows/test-justfile.yml
+
+  # ----------------------------------------------------------------------------
+  # Summary
+  # ----------------------------------------------------------------------------
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [platform-tests, quality-tests, justfile-tests]
+    if: always()
+
+    steps:
+      - name: Check Results
+        run: |
+          echo "=== CI Test Summary ==="
+          echo ""
+          echo "Platform Tests: ${{ needs.platform-tests.result }}"
+          echo "Quality Tests:  ${{ needs.quality-tests.result }}"
+          echo "Justfile Tests: ${{ needs.justfile-tests.result }}"
+          echo ""
+
+          if [ "${{ needs.platform-tests.result }}" != "success" ] || \
+             [ "${{ needs.quality-tests.result }}" != "success" ] || \
+             [ "${{ needs.justfile-tests.result }}" != "success" ]; then
+            echo "❌ Some tests failed. Please check the logs above."
+            exit 1
+          fi
+
+          echo "✅ All tests passed!"

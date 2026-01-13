@@ -451,23 +451,6 @@ auto_detect_profile() {
 
     # Linux detection (GUI support removed in v2.0, all Linux is headless)
     if [[ "$_OS" == "linux" ]]; then
-        local has_gui=false
-
-        # Check for display linux
-        if [[ -n "${DISPLAY:-}" ]] || [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
-            has_gui=true
-        fi
-
-        # Check XDG session type
-        if [[ "${XDG_SESSION_TYPE:-}" == "x11" ]] || [[ "${XDG_SESSION_TYPE:-}" == "wayland" ]]; then
-            has_gui=true
-        fi
-
-        # Check for desktop environment
-        if [[ -n "${XDG_CURRENT_DESKTOP:-}" ]] || [[ -n "${DESKTOP_SESSION:-}" ]]; then
-            has_gui=true
-        fi
-
         # All Linux → linux profile (headless)
         # Note: GUI support removed in v2.0
         echo "linux"

@@ -1,0 +1,94 @@
+# ==============================================================================
+# Code Quality & Validation Tests
+# ==============================================================================
+# Tests code quality, shell script linting, and template validation.
+#
+# Jobs:
+#   - validate-templates: Chezmoi template syntax validation
+#   - lint: Shellcheck linting for all shell scripts
+# ==============================================================================
+
+name: Quality Tests
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+# Limit concurrent runs per branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Template Syntax Validation
+  # ----------------------------------------------------------------------------
+  validate-templates:
+    name: Validate Templates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install chezmoi
+        run: |
+          sudo snap install chezmoi --classic
+
+      - name: Validate Template Syntax
+        run: |
+          echo "=== Validating Chezmoi Templates ==="
+
+          # Test each profile
+          for profile in macos mini linux; do
+            echo "--- Testing profile: $profile ---"
+            export HOMEUP_PROFILE=$profile
+
+            # Dry-run to check template rendering
+            chezmoi init --source . --destination /tmp/chezmoi-test-$profile --dry-run || {
+              echo "FAIL: Template error for profile $profile"
+              exit 1
+            }
+            echo "OK: $profile templates valid"
+          done
+
+          echo "=== All Templates Valid ==="
+
+  # ----------------------------------------------------------------------------
+  # Shell Script Linting
+  # ----------------------------------------------------------------------------
+  lint:
+    name: Lint Shell Scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint bootstrap.sh
+        run: |
+          echo "=== Linting bootstrap.sh ==="
+          shellcheck bootstrap.sh
+
+      - name: Lint All Shell Files
+        run: |
+          echo "=== Linting All Shell Scripts ==="
+          exit_code=0
+          while IFS= read -r file; do
+            echo "Checking $file..."
+            if ! shellcheck "$file"; then
+              echo "ERROR: shellcheck failed for $file"
+              exit_code=1
+            fi
+          done < <(find . -name "*.sh" -type f)
+
+          if [ $exit_code -eq 0 ]; then
+            echo "OK: All shell scripts passed linting"
+          fi
+
+          exit $exit_code

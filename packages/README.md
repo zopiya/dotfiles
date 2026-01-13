@@ -161,13 +161,44 @@ graph TD
 
 ---
 
-## 📊 统计数据
+## 📊 统计数据 (v2.0 优化后)
 
-| Profile | 组成 | 适用场景 |
-| :--- | :--- | :--- |
-| **macos** | Core + macOS | 个人电脑 |
-| **linux** | Core + Linux | 服务器 / SSH 开发机 |
-| **mini** | Mini (Standalone) | 容器 / 临时环境 |
+| Profile | Formulae | Casks | Total | 组成 | 适用场景 |
+| :--- | :---: | :---: | :---: | :--- | :--- |
+| **Core** | 64 | 0 | 64 | - | 基础层 |
+| **macOS** | 16 | 19 | 35 | Core + macOS | 个人电脑 |
+| **Linux** | 15 | 0 | 15 | Core + Linux | 服务器 / SSH 开发机 |
+| **Mini** | 23 | 0 | 23 | Standalone | 容器 / 临时环境 |
+
+### 包分布变更 (v2.0)
+
+#### 新增到 Core（从 macOS/Linux 移动）
+以下工具在 v2.0 中被提升到 Core 层，实现跨平台统一：
+
+**运行时管理**：`mise`, `uv`, `pnpm`
+**增强 CLI**：`fastfetch`, `zellij`, `bottom`, `choose`
+**文件管理**：`yazi`, `watchexec`
+**AI 开发**：`aider`, `glow`, `vhs`
+**网络工具**：`httpie`, `xh`, `doggo`, `gping`, `trippy`, `grpcurl`, `evans`
+**数据库**：`pgcli`
+**性能分析**：`hyperfine`, `tokei`, `bandwhich`
+**Git 增强**：`git-cliff`, `onefetch`, `gitleaks`
+**安全加密**：`age`
+**备份**：`restic`
+
+#### 保留在 macOS/Linux 的工具
+以下工具**有意保留在两个配置文件**中（非重复，而是按需选择）：
+
+**容器 & Kubernetes**：`k9s`, `lazydocker`, `dive`, `helm`, `kubectx`, `stern`, `kustomize`
+**基础设施即代码**：`terraform`, `ansible`, `trivy`, `grype`, `syft`
+
+**原因**：这些是专业运维工具，并非所有环境都需要。
+
+#### macOS 独有工具
+`gnupg`, `ykman`, `1password-cli`, `pinentry-mac` + 19 个 GUI 应用
+
+#### Linux 独有工具
+`glances`, `bmon`, `lnav`（服务器监控和日志分析）
 
 ---
 
@@ -209,12 +240,46 @@ brew bundle --file=packages/Brewfile.mini
 
 ## 🔄 维护指南
 
-1.  **核心通用**放 `core`。
-2.  **Linux 服务器/开发**放 `linux`。
-3.  **macOS 独有**放 `macos`。
-4.  **容器必须**放 `mini`（注意 mini 不继承 core，需要独立添加）。
+### 包放置策略
+
+1.  **核心通用工具**放 `Brewfile.core`
+    - macOS 和 Linux 都需要的工具
+    - 日常开发必需的工具
+
+2.  **Linux 服务器/运维工具**放 `Brewfile.linux`
+    - 无头服务器监控工具（glances, bmon, lnav）
+    - Linux 特定的运维工具
+
+3.  **macOS 独有工具**放 `Brewfile.macos`
+    - GUI 应用（Casks）
+    - 硬件密钥支持（GPG, YubiKey, 1Password）
+    - macOS 专用工具
+
+4.  **容器环境必需工具**放 `Brewfile.mini`
+    - Mini 是独立的，不继承 Core
+    - 只包含快速启动必需的工具
+
+5.  **Ops 工具可以重复**
+    - 容器/K8s 工具（k9s, lazydocker, helm 等）
+    - IaC 工具（terraform, ansible, trivy 等）
+    - 这些工具在 macOS 和 Linux 中重复是**有意为之**
+
+### 验证与测试
+
+```bash
+# 验证所有包是否在 Homebrew 中可用
+just packages-verify
+
+# 检查配置文件之间的重复包
+just packages-check-duplicates
+
+# 运行完整 CI 检查
+just ci
+```
 
 ### ⚠️ Breaking Changes v2.0
 
 -   **Linux Desktop 支持移除**：不再提供 Flatpak 安装列表。
 -   **Profile 重命名**：`workstation` -> `macos`, `server` -> `linux`, `codespace` -> `mini`。
+-   **包重新组织**：43 个共享包移至 Core，减少维护成本。
+-   **安全工具调整**：`gnupg`, `ykman`, `1password-cli` 仅限 macOS。

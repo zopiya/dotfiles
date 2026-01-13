@@ -90,3 +90,71 @@ brew "wget"
 # ------------------------------------------------------------------------------
 brew "chezmoi"
 brew "topgrade"
+
+# ------------------------------------------------------------------------------
+# Runtime & Package Managers
+# ------------------------------------------------------------------------------
+brew "mise"        # Universal version manager (replaces asdf, nvm, pyenv)
+brew "uv"          # Fast Python package manager
+brew "pnpm"        # Efficient Node.js package manager
+
+# ------------------------------------------------------------------------------
+# Enhanced CLI Tools
+# ------------------------------------------------------------------------------
+brew "fastfetch"   # System information tool
+brew "zellij"      # Modern terminal workspace
+brew "bottom"      # System monitor
+brew "choose"      # Better cut/awk for structured data
+
+# ------------------------------------------------------------------------------
+# File Management & Monitoring
+# ------------------------------------------------------------------------------
+brew "yazi"        # Terminal file manager
+brew "watchexec"   # Execute commands on file changes
+
+# ------------------------------------------------------------------------------
+# AI-Assisted Development & Documentation
+# ------------------------------------------------------------------------------
+brew "aider"       # AI pair programming
+brew "glow"        # Markdown renderer
+brew "vhs"         # Terminal session recorder
+
+# ------------------------------------------------------------------------------
+# Network & API Tools
+# ------------------------------------------------------------------------------
+brew "httpie"      # Human-friendly HTTP client
+brew "xh"          # Fast HTTP client (Rust)
+brew "doggo"       # Modern DNS client
+brew "gping"       # Ping with graph
+brew "trippy"      # Network diagnostic tool
+brew "grpcurl"     # gRPC curl
+brew "evans"       # gRPC client
+
+# ------------------------------------------------------------------------------
+# Database Tools
+# ------------------------------------------------------------------------------
+brew "pgcli"       # PostgreSQL CLI with autocomplete
+
+# ------------------------------------------------------------------------------
+# Performance & Code Analysis
+# ------------------------------------------------------------------------------
+brew "hyperfine"   # Command-line benchmarking tool
+brew "tokei"       # Code statistics
+brew "bandwhich"   # Bandwidth monitor by process
+
+# ------------------------------------------------------------------------------
+# Git Enhancements
+# ------------------------------------------------------------------------------
+brew "git-cliff"   # Changelog generator
+brew "onefetch"    # Git repository summary
+brew "gitleaks"    # Secret scanner for git
+
+# ------------------------------------------------------------------------------
+# Security & Encryption
+# ------------------------------------------------------------------------------
+brew "age"         # Modern file encryption tool
+
+# ------------------------------------------------------------------------------
+# Backup & Disaster Recovery
+# ------------------------------------------------------------------------------
+brew "restic"      # Fast, secure backup program

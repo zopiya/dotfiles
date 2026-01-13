@@ -608,6 +608,94 @@ git push origin your-branch
 
 ---
 
+## 🧪 Testing & CI
+
+Homeup v2.0 includes comprehensive testing to ensure reliability across all platforms.
+
+### Automated Testing
+
+Every commit is tested with **8 parallel CI jobs**:
+
+| Test Job | Platform | What It Tests |
+|----------|----------|---------------|
+| 🍎 **macOS** | macOS Latest | Full macOS setup with GPG/YubiKey |
+| 🐧 **Debian** | Debian Container | mini & linux profiles |
+| 🎩 **Fedora** | Fedora Container | mini & linux profiles |
+| 📝 **Templates** | Ubuntu | Chezmoi template syntax |
+| 🔍 **Lint** | Ubuntu | Shellcheck all scripts |
+| ⚙️ **Justfile** | Ubuntu | Just command validation |
+| 🔗 **Integration** | Ubuntu | Just + Chezmoi integration |
+
+**Total Coverage**: All 3 profiles × Multiple platforms + Syntax validation + Package verification
+
+### Running Tests Locally
+
+```bash
+# Full CI test suite
+just ci
+
+# Quick pre-commit check
+just check
+
+# Individual tests
+just lint                      # Shellcheck validation
+just validate                  # Template validation
+just packages-verify           # Package availability
+just packages-check-duplicates # Duplicate detection
+```
+
+### What Gets Tested
+
+<details>
+<summary><b>📋 Complete Test Coverage</b></summary>
+
+**Bootstrap Tests**:
+- ✅ Bootstrap.sh on macOS/Debian/Fedora
+- ✅ Homebrew installation & caching
+- ✅ Profile auto-detection
+- ✅ Non-interactive mode
+
+**Configuration Tests**:
+- ✅ Chezmoi template rendering
+- ✅ Profile-specific dotfiles
+- ✅ SSH configuration
+- ✅ GPG configuration (macOS only)
+- ✅ Security file exclusions (Linux)
+
+**Package Tests**:
+- ✅ All 102 packages exist in Homebrew
+- ✅ No duplicate packages
+- ✅ Profile-specific packages installed
+- ✅ Brewfile syntax validation
+
+**Justfile Tests** (NEW in v2.0):
+- ✅ Justfile syntax validation
+- ✅ All 80+ commands accessible
+- ✅ Help system works
+- ✅ Package verification commands
+- ✅ Profile management
+- ✅ Chezmoi integration
+
+**Integration Tests**:
+- ✅ Just → Chezmoi workflow
+- ✅ Profile switching
+- ✅ Git hooks installation
+- ✅ Full end-to-end bootstrap
+
+</details>
+
+### CI Status Badge
+
+Check the current build status:
+
+[![CI](https://github.com/zopiya/homeup/actions/workflows/ci.yml/badge.svg)](https://github.com/zopiya/homeup/actions/workflows/ci.yml)
+
+### Learn More
+
+See [.github/workflows/CI_TESTING_GUIDE.md](.github/workflows/CI_TESTING_GUIDE.md) for detailed testing documentation.
+
+---
+
 ## 📚 Documentation
 
 <details>
