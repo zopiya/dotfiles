@@ -943,7 +943,7 @@ main() {
     local current_step=0
 
     # Step 1: Check prerequisites
-    ((current_step++))
+    ((++current_step))
     print_progress $current_step $total_steps "Checking prerequisites..."
     check_dependencies
     check_bash_version
@@ -953,12 +953,12 @@ main() {
     check_prerequisites
 
     # Step 2: Setup sudo
-    ((current_step++))
+    ((++current_step))
     print_progress $current_step $total_steps "Setting up sudo access..."
     setup_sudo
 
     # Step 3: Detect system and profile
-    ((current_step++))
+    ((++current_step))
     print_progress $current_step $total_steps "Detecting system configuration..."
     if [[ "$_OS" == "darwin" ]]; then
         msg_ok "System: macOS ($_ARCH)"
@@ -968,7 +968,7 @@ main() {
     detect_profile
 
     # Step 4: Platform-specific dependencies
-    ((current_step++))
+    ((++current_step))
     print_progress $current_step $total_steps "Installing platform dependencies..."
     if [[ "$_OS" == "darwin" ]]; then
         check_xcode_tools
@@ -977,17 +977,17 @@ main() {
     fi
 
     # Step 5: Install Homebrew
-    ((current_step++))
+    ((++current_step))
     print_progress $current_step $total_steps "Installing Homebrew..."
     install_brew
 
     # Step 6: Install Chezmoi
-    ((current_step++))
+    ((++current_step))
     print_progress $current_step $total_steps "Installing Chezmoi..."
     install_chezmoi
 
     # Step 7: Summary
-    ((current_step++))
+    ((++current_step))
     print_progress $current_step $total_steps "Finalizing setup..."
 
     print_summary
