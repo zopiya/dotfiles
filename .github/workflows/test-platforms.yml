@@ -15,10 +15,6 @@ on:
   workflow_call:
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 env:
   NONINTERACTIVE: 1
   HOMEBREW_NO_AUTO_UPDATE: 1

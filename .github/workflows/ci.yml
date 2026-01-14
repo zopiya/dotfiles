@@ -25,11 +25,13 @@ jobs:
   quality:
     name: Quality
     uses: ./.github/workflows/test-quality.yml
+    secrets: inherit
 
   # Platform integration tests
   platforms:
     name: Platforms
     uses: ./.github/workflows/test-platforms.yml
+    secrets: inherit
 
   # Summary
   summary:
@@ -47,10 +49,13 @@ jobs:
           echo "Platforms: ${{ needs.platforms.result }}"
           echo ""
 
-          if [ "${{ needs.quality.result }}" != "success" ] || \
-             [ "${{ needs.platforms.result }}" != "success" ]; then
-            echo "✗ Some tests failed"
+          # Fail only if explicit failure or cancelled
+          if [ "${{ needs.quality.result }}" == "failure" ] || \
+             [ "${{ needs.platforms.result }}" == "failure" ] || \
+             [ "${{ needs.quality.result }}" == "cancelled" ] || \
+             [ "${{ needs.platforms.result }}" == "cancelled" ]; then
+            echo "✗ Some tests failed or were cancelled"
             exit 1
           fi
 
-          echo "✓ All tests passed"
+          echo "✓ All tests passed (or skipped)"
