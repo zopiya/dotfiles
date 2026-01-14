@@ -550,9 +550,24 @@ install_homebrew() {
     while [[ $count -lt $RETRY_COUNT ]]; do
         ((count++))
 
-        # Capture output for error reporting
+        msg_info "Attempt $count/$RETRY_COUNT: Downloading Homebrew installer..."
+
+        # Download install script first
+        local install_script
+        if ! install_script=$(curl -fsSL --max-time 60 "$BREW_INSTALL_URL" 2>&1); then
+            last_error="Failed to download Homebrew installer: $install_script"
+            msg_warn "$last_error"
+            if [[ $count -lt $RETRY_COUNT ]]; then
+                sleep "$RETRY_DELAY"
+            fi
+            continue
+        fi
+
+        msg_info "Running Homebrew installer..."
+
+        # Execute install script and capture output
         local install_output
-        if install_output=$(NONINTERACTIVE=1 bash -c "$(curl -fsSL --max-time "$DOWNLOAD_TIMEOUT" "$BREW_INSTALL_URL")" 2>&1); then
+        if install_output=$(NONINTERACTIVE=1 bash -c "$install_script" 2>&1); then
             # Determine installation prefix
             if [[ "$_OS" == "darwin" ]]; then
                 if [[ -x "/opt/homebrew/bin/brew" ]]; then
@@ -569,22 +584,23 @@ install_homebrew() {
             return 0
         else
             last_error="$install_output"
-        fi
+            msg_warn "Homebrew installation failed on attempt $count"
 
-        if [[ $count -lt $RETRY_COUNT ]]; then
-            msg_warn "Homebrew installation failed (Attempt $count/$RETRY_COUNT). Retrying in ${RETRY_DELAY}s..."
-            sleep "$RETRY_DELAY"
-        else
-            # Last attempt - show error details
-            msg_fail "Homebrew installation failed after $RETRY_COUNT attempts."
-            if [[ -n "$last_error" ]]; then
-                echo "Last error output:" >&2
-                echo "$last_error" | tail -20 >&2
+            # Show error immediately for debugging
+            echo "════════════════════════════════════════════════════════" >&2
+            echo "Error output (last 30 lines):" >&2
+            echo "$last_error" | tail -30 >&2
+            echo "════════════════════════════════════════════════════════" >&2
+
+            if [[ $count -lt $RETRY_COUNT ]]; then
+                msg_info "Retrying in ${RETRY_DELAY}s..."
+                sleep "$RETRY_DELAY"
             fi
         fi
     done
 
-    die "Failed to install Homebrew. Please check the error output above."
+    msg_fail "Failed to install Homebrew after $RETRY_COUNT attempts."
+    die "Homebrew installation failed. See error output above."
 }
 
 install_chezmoi() {

@@ -18,7 +18,7 @@
 # Dependencies: Brewfile.core
 # ==============================================================================
 
-tap "1password/tap"
+# tap "1password/tap"  # No longer needed - 1password-cli is now in homebrew-cask
 
 # Note: Enhanced CLI tools (fastfetch, zellij, bottom, choose) moved to Brewfile.core
 # Note: File management tools (yazi, watchexec) moved to Brewfile.core
@@ -57,7 +57,7 @@ brew "syft"
 # Note: gitleaks moved to Brewfile.core (git secret scanning)
 brew "gnupg"           # GPG encryption & signing (macOS only)
 brew "ykman"           # YubiKey manager (hardware key support)
-brew "1password-cli"   # 1Password CLI (macOS integration)
+cask "1password-cli"   # 1Password CLI (macOS integration) - now a cask
 brew "pinentry-mac"    # macOS native pinentry for GPG
 
 # Note: Backup tools (restic) moved to Brewfile.core
