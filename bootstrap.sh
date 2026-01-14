@@ -439,7 +439,9 @@ decide_profile() {
 # ------------------------------------------------------------------------------
 
 install_debian_deps() {
-    local -r packages=(build-essential procps file)
+    # Homebrew official requirements for Debian/Ubuntu
+    # https://docs.brew.sh/Homebrew-on-Linux
+    local -r packages=(build-essential procps curl file git)
 
     export DEBIAN_FRONTEND=noninteractive
 
@@ -457,7 +459,9 @@ install_debian_deps() {
 }
 
 install_fedora_deps() {
-    local -r packages=("@development-tools" procps-ng file)
+    # Homebrew official requirements for Fedora/RHEL
+    # https://docs.brew.sh/Homebrew-on-Linux
+    local -r packages=("@development-tools" procps-ng curl file git)
 
     msg_info "Installing system build dependencies..."
     if ! sudo dnf install -y -q "${packages[@]}" >/dev/null 2>&1; then
@@ -525,7 +529,7 @@ install_homebrew() {
     if command -v brew >/dev/null 2>&1; then
         msg_ok "Homebrew already installed."
         brew_prefix="$(brew --prefix)"
-        BREW_PREFIX="$brew_prefix"
+        configure_homebrew_env "$brew_prefix"
         return 0
     fi
 
@@ -719,15 +723,20 @@ main() {
 
     # Step 3: Prerequisites
     msg_step "3. Prerequisites"
-    check_prerequisites
+
+    # Setup sudo first (needed for system package installation)
     setup_sudo
 
-    # Platform-specific prerequisites
+    # Platform-specific: Install system dependencies BEFORE checking tools
     if [[ "$_OS" == "darwin" ]]; then
         check_macos_prerequisites
     else
+        # Install required system packages (git, curl, build tools, etc.)
         install_system_deps
     fi
+
+    # Now verify all prerequisites are met
+    check_prerequisites
 
     # Step 4: Core Tools Installation
     msg_step "4. Core Tools Installation"
