@@ -46,17 +46,10 @@ jobs:
           key: macos-homebrew-${{ hashFiles('bootstrap.sh') }}
           restore-keys: macos-homebrew-
 
-      - name: Bootstrap
+      - name: Bootstrap & Apply
         run: |
           chmod +x bootstrap.sh
-          ./bootstrap.sh -p macos -y
-        env:
-          HOMEUP_PROFILE: macos
-
-      - name: Apply dotfiles
-        run: |
-          source "$HOME/.config/homebrew/shellenv"
-          chezmoi init --apply --source .
+          ./bootstrap.sh -p macos -a -y
         env:
           HOMEUP_PROFILE: macos
 
@@ -133,21 +126,12 @@ jobs:
           chown -R testuser:testuser $GITHUB_WORKSPACE
           [ -d /home/linuxbrew ] && chown -R testuser:testuser /home/linuxbrew || true
 
-      - name: Bootstrap
+      - name: Bootstrap & Apply
         run: |
           sudo -u testuser bash -c "
             export HOMEUP_PROFILE=${{ matrix.profile }}
             cd $GITHUB_WORKSPACE
-            ./bootstrap.sh -p ${{ matrix.profile }} -y
-          "
-
-      - name: Apply dotfiles
-        run: |
-          sudo -u testuser bash -c "
-            export HOMEUP_PROFILE=${{ matrix.profile }}
-            eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"
-            cd $GITHUB_WORKSPACE
-            chezmoi init --apply --source .
+            ./bootstrap.sh -p ${{ matrix.profile }} -a -y
           "
 
       - name: Install just
@@ -255,21 +239,12 @@ jobs:
           chown -R testuser:testuser $GITHUB_WORKSPACE
           [ -d /home/linuxbrew ] && chown -R testuser:testuser /home/linuxbrew || true
 
-      - name: Bootstrap
+      - name: Bootstrap & Apply
         run: |
           sudo -u testuser bash -c "
             export HOMEUP_PROFILE=${{ matrix.profile }}
             cd $GITHUB_WORKSPACE
-            ./bootstrap.sh -p ${{ matrix.profile }} -y
-          "
-
-      - name: Apply dotfiles
-        run: |
-          sudo -u testuser bash -c "
-            export HOMEUP_PROFILE=${{ matrix.profile }}
-            eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"
-            cd $GITHUB_WORKSPACE
-            chezmoi init --apply --source .
+            ./bootstrap.sh -p ${{ matrix.profile }} -a -y
           "
 
       - name: Install just
