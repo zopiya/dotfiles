@@ -135,6 +135,7 @@ jobs:
           echo "testuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/testuser
           chmod +x bootstrap.sh
           chown -R testuser:testuser $GITHUB_WORKSPACE
+          [ -d /home/linuxbrew ] && chown -R testuser:testuser /home/linuxbrew || true
 
       - name: Bootstrap
         run: |
@@ -255,6 +256,7 @@ jobs:
           echo "testuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/testuser
           chmod +x bootstrap.sh
           chown -R testuser:testuser $GITHUB_WORKSPACE
+          [ -d /home/linuxbrew ] && chown -R testuser:testuser /home/linuxbrew || true
 
       - name: Bootstrap
         run: |
