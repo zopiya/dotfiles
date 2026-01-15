@@ -154,10 +154,10 @@ Host *
 
 {{- if eq .chezmoi.os "darwin" }}
     # --- macOS Keychain Integration ---
-    # IgnoreUnknown must use comma-separated list, no spaces
-    IgnoreUnknown UseKeychain,AppleUseKeychain
+    # UseKeychain: Store SSH passphrases in macOS Keychain
+    # IgnoreUnknown: Prevent errors on non-macOS OpenSSH versions
+    IgnoreUnknown UseKeychain
     UseKeychain yes
-    AppleUseKeychain yes
 {{- end }}
 
 
