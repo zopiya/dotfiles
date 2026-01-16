@@ -1,0 +1,167 @@
+# ==============================================================================
+# Ghostty Terminal Configuration
+# ==============================================================================
+# Optimized for: macOS and Linux (chezmoi template)
+# Version: 1.2.0+ compatible
+# Last updated: 2025-01
+
+# ==============================================================================
+# TERMINAL & SHELL
+# ==============================================================================
+
+term = xterm-256color
+# working-directory = ~
+shell-integration = detect
+shell-integration-features = cursor,sudo,title
+
+# ==============================================================================
+# WINDOW CONFIGURATION
+# ==============================================================================
+
+# Initial window dimensions (cells)
+window-width = 110
+window-height = 30
+
+# Window padding (points, not cells!)
+window-padding-x = 4
+window-padding-y = 4
+window-padding-balance = true
+window-padding-color = background
+
+# Window decoration
+window-decoration = auto
+
+{{- if eq .chezmoi.os "darwin" }}
+# macOS-specific titlebar
+macos-titlebar-style = transparent
+macos-option-as-alt = true
+{{- end }}
+
+# Performance
+window-vsync = true
+
+# Inheritance
+window-inherit-working-directory = true
+window-inherit-font-size = false
+
+# ==============================================================================
+# FONT CONFIGURATION
+# ==============================================================================
+
+font-family = Monaspace Neon
+font-size = 16
+
+# Fallback fonts
+font-family = Noto Color Emoji
+font-family = Symbols Nerd Font Mono
+
+# Font rendering
+font-thicken = true
+adjust-cell-height = 10%
+
+# Ligatures
+font-feature = +calt,+liga
+
+# ==============================================================================
+# COLORS & THEME
+# ==============================================================================
+
+theme = GitHub Dark
+
+# Transparency
+background-opacity = 0.95
+
+# True color support
+minimum-contrast = 1.1
+
+# ==============================================================================
+# CURSOR
+# ==============================================================================
+
+cursor-style = block
+cursor-style-blink = true
+cursor-opacity = 1.0
+
+# ==============================================================================
+# SCROLLBACK & PERFORMANCE
+# ==============================================================================
+
+scrollback-limit = 10000
+
+# Smooth scrolling
+mouse-scroll-multiplier = 3.0
+
+{{- if eq .chezmoi.os "linux" }}
+# Linux performance boost
+gtk-single-instance = true
+{{- end }}
+
+# ==============================================================================
+# CLIPBOARD & SELECTION
+# ==============================================================================
+
+copy-on-select = true
+clipboard-trim-trailing-spaces = true
+clipboard-paste-protection = true
+
+# ==============================================================================
+# KEYBINDINGS
+# ==============================================================================
+
+{{- $mod := eq .chezmoi.os "darwin" | ternary "cmd" "super" }}
+
+# Window management
+keybind = {{ $mod }}+n=new_window
+keybind = {{ $mod }}+w=close_window
+
+# Tab management
+keybind = {{ $mod }}+t=new_tab
+
+# Clipboard
+keybind = {{ $mod }}+c=copy_to_clipboard
+keybind = {{ $mod }}+v=paste_from_clipboard
+
+# Font sizing
+keybind = {{ $mod }}+equal=increase_font_size:1
+keybind = {{ $mod }}+minus=decrease_font_size:1
+
+# ==============================================================================
+# MOUSE BEHAVIOR
+# ==============================================================================
+
+mouse-hide-while-typing = true
+focus-follows-mouse = false
+mouse-shift-capture = false
+
+# ==============================================================================
+# ADVANCED
+# ==============================================================================
+
+# Window close behavior
+confirm-close-surface = true
+quit-after-last-window-closed = {{ if eq .chezmoi.os "darwin" }}false{{ else }}true{{ end }}
+
+# State saving
+window-save-state = default
+
+# Notifications
+{{- if eq .chezmoi.os "linux" }}
+app-notifications = clipboard-copy,no-config-reload
+{{- end }}
+
+# ==============================================================================
+# NOTES
+# ==============================================================================
+#
+# This configuration is managed by chezmoi:
+#   - Edit: chezmoi edit ~/.config/ghostty/config
+#   - Apply: chezmoi apply
+#
+# Useful commands:
+#   - ghostty +list-themes       # List available themes
+#   - ghostty +show-config       # Show current config
+#   - ghostty +list-fonts        # List available fonts
+#
+# Documentation: https://ghostty.org/docs
+#
+# ==============================================================================
