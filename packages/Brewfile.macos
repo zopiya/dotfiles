@@ -1,9 +1,9 @@
-# Security & encryption
+# Security Hardware
 brew "gnupg"
 brew "ykman"
 brew "pinentry-mac"
 
-# AI applications
+# AI Applications
 cask "claude-code"
 brew "gemini-cli"
 cask "codex"
@@ -14,10 +14,6 @@ cask "font-hack-nerd-font"
 cask "font-noto-sans"
 cask "font-source-han-serif-vf"
 
-# Office
-cask "snipaste"
-cask "wpsoffice-cn"
-
 # Browsers
 cask "google-chrome"
 cask "firefox"
@@ -26,20 +22,22 @@ cask "firefox"
 cask "ghostty"
 cask "warp"
 
-# Communication & sync
-cask "localsend"
-cask "nextcloud"
-
-# Development tools
+# Development GUI
 cask "visual-studio-code"
 cask "dbeaver-community"
 cask "bruno"
 
-# Productivity & knowledge
+# Productivity
 cask "obsidian"
 cask "typora"
+cask "snipaste"
+cask "wpsoffice-cn"
 
-# System utilities
+# Cloud & Sync
+cask "localsend"
+cask "nextcloud"
+
+# System Utilities
 cask "stats"
 cask "keka"
 cask "vlc"

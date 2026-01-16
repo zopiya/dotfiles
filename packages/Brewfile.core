@@ -1,7 +1,5 @@
-# Navigation & search
+# Modern Unix Replacements
 brew "atuin"
-
-# Modern Unix replacements
 brew "bat"
 brew "eza"
 brew "fd"
@@ -10,61 +8,18 @@ brew "sd"
 brew "dust"
 brew "duf"
 brew "procs"
-brew "btop"
+brew "bottom"
+brew "tealdeer"
 
-# Text processing & data tools
+# Data Processing
 brew "jq"
 brew "yq"
 brew "miller"
 brew "gron"
-brew "tldr"
+brew "xsv"
+brew "visidata"
 
-# Compression & archives
-brew "zstd"
-brew "ouch"
-
-# Version control
-brew "gh"
-brew "lazygit"
-brew "git-delta"
-
-# Editor & terminal
-brew "neovim"
-brew "tmux"
-
-# Development workflow
-brew "direnv"
-brew "lefthook"
-brew "entr"
-
-# Network essentials
-brew "wget"
-
-# System maintenance
-brew "topgrade"
-
-# Runtime & package managers
-brew "mise"
-brew "uv"
-brew "pnpm"
-
-# Enhanced CLI tools
-brew "fastfetch"
-brew "zellij"
-brew "bottom"
-brew "choose"
-
-# File management & monitoring
-brew "yazi"
-brew "watchexec"
-
-# AI & documentation
-brew "aider"
-brew "glow"
-brew "vhs"
-
-# Network & API tools
-brew "httpie"
+# Network & API
 brew "xh"
 brew "doggo"
 brew "gping"
@@ -72,26 +27,40 @@ brew "trippy"
 brew "grpcurl"
 brew "evans"
 
-# Database tools
-brew "pgcli"
+# Development & Runtime
+brew "neovim"
+brew "tmux"
+brew "zellij"
+brew "direnv"
+brew "lefthook"
+brew "mise"
+brew "uv"
+brew "pnpm"
 
-# Performance & analysis
-brew "hyperfine"
-brew "tokei"
-brew "bandwhich"
+# Utilities & Productivity
+brew "fastfetch"
+brew "choose"
+brew "yazi"
+brew "watchexec"
+brew "aider"
+brew "glow"
+brew "vhs"
+brew "zstd"
+brew "ouch"
 
-# Git enhancements
+# Git Enhancements
+brew "gh"
+brew "lazygit"
+brew "git-delta"
 brew "git-cliff"
 brew "onefetch"
 brew "gitleaks"
 
-# Security & encryption
+# Security
 brew "age"
+brew "sops"
 
-# Backup & recovery
-brew "restic"
-
-# Container & Kubernetes
+# DevOps & K8s
 brew "lazydocker"
 brew "dive"
 brew "k9s"
@@ -99,10 +68,11 @@ brew "helm"
 brew "kubectx"
 brew "stern"
 brew "kustomize"
-
-# Infrastructure & DevOps
-brew "terraform"
-brew "ansible"
 brew "trivy"
 brew "grype"
 brew "syft"
+
+# Infrastructure as Code
+brew "tenv"
+brew "ansible"
+brew "checkov"

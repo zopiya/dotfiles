@@ -1,22 +1,14 @@
-# Shell (must be first)
+# Shell essentials
 brew "zsh"
-
-# Version control
 brew "git"
-
-# Network essentials
 brew "curl"
 
-# Shell plugins
+# Environment & Navigation
 brew "starship"
 brew "sheldon"
-
-# Navigation
 brew "zoxide"
 brew "fzf"
 
-# Dotfiles management
+# Management
 brew "chezmoi"
-
-# Task runner
 brew "just"
