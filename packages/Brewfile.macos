@@ -1,12 +1,12 @@
-# Security Hardware
+# Security & Identity
 brew "gnupg"
 brew "ykman"
 brew "pinentry-mac"
+cask "1password"
 
-# AI Applications
-cask "claude-code"
-brew "gemini-cli"
-cask "codex"
+# Cloud & Sync
+cask "localsend"
+cask "nextcloud"
 
 # Fonts
 cask "font-jetbrains-mono-nerd-font"
@@ -14,30 +14,41 @@ cask "font-hack-nerd-font"
 cask "font-noto-sans"
 cask "font-source-han-serif-vf"
 
-# Browsers
-cask "google-chrome"
-cask "firefox"
-
 # Terminals
 cask "ghostty"
 cask "warp"
 
-# Development GUI
+# Development & Editors
 cask "visual-studio-code"
 cask "dbeaver-community"
-cask "bruno"
+cask "coteditor"
+
+# AI
+cask "claude-code"
+brew "gemini-cli"
+cask "codex"
 
 # Productivity
-cask "obsidian"
-cask "typora"
+cask "raycast"
 cask "snipaste"
+cask "shottr"
 cask "wpsoffice-cn"
 
-# Cloud & Sync
-cask "localsend"
-cask "nextcloud"
+# Notes & Writing
+cask "obsidian"
+cask "typora"
+
+# Browsers
+cask "google-chrome"
+cask "firefox"
 
 # System Utilities
 cask "stats"
 cask "keka"
+cask "appcleaner"
+cask "jordanbaird-ice"
+cask "monitorcontrol"
+
+# Media
 cask "vlc"
+cask "iina"
