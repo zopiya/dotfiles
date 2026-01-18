@@ -27,14 +27,18 @@ cask "coteditor"
 cask "claude-code"
 brew "gemini-cli"
 cask "codex"
+cask "sabaki"
 
 # Productivity
 cask "raycast"
 cask "snipaste"
 cask "shottr"
 cask "wpsoffice-cn"
+cask "windows-app"
 
 # Notes & Writing
+cask "notion"
+cask "zotero"
 cask "obsidian"
 cask "typora"
 
@@ -48,6 +52,7 @@ cask "keka"
 cask "appcleaner"
 cask "jordanbaird-ice"
 cask "monitorcontrol"
+cask "balenaetcher"
 
 # Media
 cask "vlc"
